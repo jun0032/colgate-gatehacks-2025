@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@elevenlabs/elevenlabs-js": "^2.24.1",
-    "dotenv": "^17.2.3"
-  }
-}
