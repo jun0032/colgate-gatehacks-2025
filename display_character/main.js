@@ -33,6 +33,18 @@ app.whenReady().then(() => {
     },
   });
 
+  // In main.js
+  const isLinux = process.platform === 'linux';
+
+  if (!isLinux) {
+    // Only enable click-through on Windows/Mac
+    win.setIgnoreMouseEvents(true, { forward: true });
+    
+    ipcMain.on('set-clickable', (event, clickable) => {
+      win.setIgnoreMouseEvents(!clickable, { forward: true });
+    });
+  }
+
   win.loadFile("character.html");
   win.setIgnoreMouseEvents(true, { forward: true }); // Start with click-through enabled
 
