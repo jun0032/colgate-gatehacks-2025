@@ -38,6 +38,21 @@ app.whenReady().then(() => {
     },
   });
 
+  // load html 
+  win.loadFile("character.html");
+  
+  // Check operating system
+  const isLinux = process.platform === 'linux';
+
+  if (!isLinux) {
+    // Only enable click-through on Windows/Mac
+    win.setIgnoreMouseEvents(true, { forward: true });
+    
+    ipcMain.on('set-clickable', (event, clickable) => {
+      win.setIgnoreMouseEvents(!clickable, { forward: true });
+    });
+  }
+
   session.defaultSession.setPermissionRequestHandler(
     (webContents, permission, callback) => {
       if (permission === "media") {
@@ -47,16 +62,6 @@ app.whenReady().then(() => {
       }
     }
   );
-
-  const isLinux = process.platform === "linux";
-  if (!isLinux) {
-    win.setIgnoreMouseEvents(true, { forward: true });
-    ipcMain.on("set-clickable", (event, clickable) => {
-      win.setIgnoreMouseEvents(!clickable, { forward: true });
-    });
-  }
-
-  win.loadFile("character.html");
 
   ipcMain.on("close-app", () => {
     app.quit();

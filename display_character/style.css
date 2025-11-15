@@ -3,6 +3,9 @@ body {
   margin: 0;
   overflow: hidden;
   font-family: Arial, sans-serif;
+
+  border: 2px solid white;
+  box-sizing: border-box;
 }
 
 #controls {
@@ -15,15 +18,16 @@ body {
 }
 
 #controls button {
-  background: rgba(0, 0, 0, 0.7);
+  /* background: rgba(0, 0, 0, 0.7);
   border: none;
-  color: white;
+  color: white; */
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background 0.2s;
-}
+  width: 50%;
+  /* font-size: 14px;
+  transition: background 0.2s; */
+} */
 
 #controls button:hover {
   background: rgba(0, 0, 0, 0.9);
