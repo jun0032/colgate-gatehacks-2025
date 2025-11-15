@@ -15,6 +15,18 @@
   <script>
     const { ipcRenderer } = require('electron');
     
+    const interactiveElements = document.querySelectorAll('#character, #controls, #text');
+    
+    interactiveElements.forEach(element => {
+      element.addEventListener('mouseenter', () => {
+        ipcRenderer.send('set-clickable', true);
+      });
+      
+      element.addEventListener('mouseleave', () => {
+        ipcRenderer.send('set-clickable', false);
+      });
+    });
+
     // Close button
     document.getElementById('close-btn').addEventListener('click', () => {
       ipcRenderer.send('close-app');

@@ -8,8 +8,8 @@ app.whenReady().then(() => {
     transparent: true,
     frame: false,
     alwaysOnTop: true,
-    width: 500,
-    height: 500,
+    width: Math.floor(width * 0.15),   // 15% of screen width
+    height: Math.floor(height * 0.25), // 25% of screen height
     x: 0,
     y: 0,
     resizable: false,
@@ -20,7 +20,13 @@ app.whenReady().then(() => {
   });
   
   win.loadFile('character.html');
+  win.setIgnoreMouseEvents(true, { forward: true }); // Start with click-through enabled
   
+  // Listen for hover events from renderer
+  ipcMain.on('set-clickable', (event, clickable) => {
+    win.setIgnoreMouseEvents(!clickable, { forward: true });
+  });
+
   // Listen for close event from renderer
   ipcMain.on('close-app', () => {
     app.quit();
