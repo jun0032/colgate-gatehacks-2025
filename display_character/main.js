@@ -1,4 +1,4 @@
-const { app, BrowserWindow, screen } = require('electron');
+const { app, BrowserWindow, screen, ipcMain } = require('electron');
 
 app.whenReady().then(() => {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -8,9 +8,9 @@ app.whenReady().then(() => {
     transparent: true,
     frame: false,
     alwaysOnTop: true,
-    width: 200,
-    height: 200,
-    x: 0,  // Top-left corner
+    width: 500,
+    height: 500,
+    x: 0,
     y: 0,
     resizable: false,
     webPreferences: { 
@@ -20,5 +20,16 @@ app.whenReady().then(() => {
   });
   
   win.loadFile('character.html');
-  win.setIgnoreMouseEvents(true, { forward: true }); // Click-through
+  
+  // Listen for close event from renderer
+  ipcMain.on('close-app', () => {
+    app.quit();
+  });
+  
+  // Optional: DevTools for debugging
+  // win.webContents.openDevTools();
+});
+
+app.on('window-all-closed', () => {
+  app.quit();
 });

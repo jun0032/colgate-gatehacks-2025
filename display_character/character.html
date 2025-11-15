@@ -1,9 +1,30 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <img id="character" src="character.gif" />
-  </body>
+<head>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="controls">
+    <button id="settings-btn">⚙️</button>
+    <button id="close-btn">✖️</button>
+  </div>
+  
+  <img id="character" src="character.gif" />
+  <div id="text">Hello from the corner!</div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    
+    // Close button
+    document.getElementById('close-btn').addEventListener('click', () => {
+      ipcRenderer.send('close-app');
+    });
+    
+    // Settings button
+    document.getElementById('settings-btn').addEventListener('click', () => {
+      alert('Settings clicked! Add your settings UI here');
+      // You can open a modal, toggle options, etc.
+    });
+  </script>
+</body>
 </html>
