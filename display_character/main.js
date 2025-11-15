@@ -33,6 +33,7 @@ app.whenReady().then(() => {
     },
   });
 
+  
   // In main.js
   const isLinux = process.platform === 'linux';
 
@@ -46,12 +47,12 @@ app.whenReady().then(() => {
   }
 
   win.loadFile("character.html");
-  win.setIgnoreMouseEvents(true, { forward: true }); // Start with click-through enabled
+  // win.setIgnoreMouseEvents(true, { forward: true }); // Start with click-through enabled
 
-  // Listen for hover events from renderer
-  ipcMain.on("set-clickable", (event, clickable) => {
-    win.setIgnoreMouseEvents(!clickable, { forward: true });
-  });
+  // // Listen for hover events from renderer
+  // ipcMain.on("set-clickable", (event, clickable) => {
+  //   win.setIgnoreMouseEvents(!clickable, { forward: true });
+  // });
 
   // Listen for close event from renderer
   ipcMain.on("close-app", () => {
