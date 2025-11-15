@@ -1,0 +1,21 @@
+body { 
+  background: transparent; 
+  margin: 0;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+#character {
+  width: 200px;
+  height: 200px;
+}
+
+#text {
+  color: white;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 14px;
+  max-width: 250px;
+}
