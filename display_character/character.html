@@ -50,12 +50,12 @@
       });
 
       // PROMPT STUFF
-
       async function analyzeImage(imagePath) {
         const result = await ipcRenderer.invoke("analyze-image", imagePath);
         console.log(result);
         return result;
       }
+
       // At the bottom of your script
       (async () => {
         document.getElementById("text").innerHTML = "Loading...";
