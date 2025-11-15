@@ -1,5 +1,4 @@
-const ELEVENLABS_API_KEY =
-  "sk_26f0a9bd1fadef18412d1589fae21254303142853ff58635";
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const VOICE_ID = "JBFqnCBsd6RMkjVDRZzb";
 
 async function textToSpeech(text) {
