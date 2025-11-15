@@ -1,42 +1,58 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div id="controls">
-    <button id="settings-btn">⚙️</button>
-    <button id="close-btn">✖️</button>
-  </div>
-  
-  <img id="character" src="character.gif" />
-  <div id="text">Hello from the corner!</div>
+  <head>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="controls">
+      <button id="settings-btn">⚙️</button>
+      <button id="close-btn">✖️</button>
+    </div>
 
-  <script>
-    const { ipcRenderer } = require('electron');
-    
-    const interactiveElements = document.querySelectorAll('#character, #controls, #text');
-    
-    interactiveElements.forEach(element => {
-      element.addEventListener('mouseenter', () => {
-        ipcRenderer.send('set-clickable', true);
-      });
-      
-      element.addEventListener('mouseleave', () => {
-        ipcRenderer.send('set-clickable', false);
-      });
-    });
+    <img id="character" src="character.gif" />
+    <div id="text">Hello from the corner!</div>
 
-    // Close button
-    document.getElementById('close-btn').addEventListener('click', () => {
-      ipcRenderer.send('close-app');
-    });
-    
-    // Settings button
-    document.getElementById('settings-btn').addEventListener('click', () => {
-      alert('Settings clicked! Add your settings UI here');
-      // You can open a modal, toggle options, etc.
-    });
-  </script>
-</body>
+    <script>
+      const { ipcRenderer } = require("electron");
+
+      const interactiveElements = document.querySelectorAll(
+        "#character, #controls, #text"
+      );
+
+      interactiveElements.forEach((element) => {
+        element.addEventListener("mouseenter", () => {
+          ipcRenderer.send("set-clickable", true);
+        });
+
+        element.addEventListener("mouseleave", () => {
+          ipcRenderer.send("set-clickable", false);
+        });
+      });
+
+      // Close button
+      document.getElementById("close-btn").addEventListener("click", () => {
+        ipcRenderer.send("close-app");
+      });
+
+      // Settings button
+      document.getElementById("settings-btn").addEventListener("click", () => {
+        alert("Settings clicked! Add your settings UI here");
+        // You can open a modal, toggle options, etc.
+      });
+
+      // PROMPT STUFF
+
+      async function analyzeImage(imagePath) {
+        const result = await ipcRenderer.invoke("analyze-image", imagePath);
+        console.log(result);
+        return result;
+      }
+      // At the bottom of your script
+      (async () => {
+        document.getElementById("text").innerHTML = "Loading...";
+        const result = await analyzeImage("Pink_lady_and_cross_section.jpg");
+        document.getElementById("text").innerHTML = result;
+      })();
+    </script>
+  </body>
 </html>
