@@ -4,6 +4,18 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <script src="audio_test.js"></script>
+    <script>
+      // Unofficial Google Translate TTS
+      function speakWithGoogle(text, lang = "en") {
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(
+          text
+        )}`;
+        const audio = new Audio(url);
+        audio.play();
+      }
+
+      // Usage
+      speakWithGoogle("The first move is what sets everything in motion.");
+    </script>
   </body>
 </html>
