@@ -1,6 +1,12 @@
 require("dotenv").config(); // Add this at the very top
 
 const { app, BrowserWindow, screen, ipcMain } = require("electron");
+
+// Add these lines to disable GPU
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("disable-software-rasterizer");
+
 const { GoogleGenAI } = require("@google/genai");
 const fs = require("fs");
 
