@@ -30,8 +30,8 @@ body {
 }
 
 #character {
-  width: 200px;
-  height: 200px;
+  width: 10%;
+  height: auto; /* Maintains aspect ratio */
   cursor: pointer;  /* Show it's interactive */
 }
 

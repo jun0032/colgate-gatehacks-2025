@@ -16,8 +16,8 @@ app.whenReady().then(() => {
     transparent: true,
     frame: false,
     alwaysOnTop: true,
-    width: Math.floor(width * 0.15), // 15% of screen width
-    height: Math.floor(height * 0.25), // 25% of screen height
+    width: width,
+    height: height,
     x: 0,
     y: 0,
     resizable: false,
