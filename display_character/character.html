@@ -19,6 +19,15 @@
         "#character, #controls, #text"
       );
 
+      // Unofficial Google Translate TTS
+      function speakWithGoogle(text, lang = "en") {
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(
+          text
+        )}`;
+        const audio = new Audio(url);
+        audio.play();
+      }
+
       interactiveElements.forEach((element) => {
         element.addEventListener("mouseenter", () => {
           ipcRenderer.send("set-clickable", true);
@@ -52,6 +61,7 @@
         document.getElementById("text").innerHTML = "Loading...";
         const result = await analyzeImage("Pink_lady_and_cross_section.jpg");
         document.getElementById("text").innerHTML = result;
+        speakWithGoogle(result);
       })();
     </script>
   </body>
