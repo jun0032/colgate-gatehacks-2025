@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="https://unpkg.com/98.css" />
     <script type="module">
-  import confetti from "https://cdn.skypack.dev/canvas-confetti";
-  window.confetti = confetti;
-</script>
+      import confetti from "https://cdn.skypack.dev/canvas-confetti";
+      window.confetti = confetti;
+    </script>
   </head>
   <body>
     <div id="HUD" class="window">
@@ -18,7 +18,7 @@
         </div>
       </div>
       <div class="mini-container-hud">
-        <img id="portrait" src="characters/cat.jpg"></img>
+        <img id="portrait" src="characters/cat.jpg" />
         <div id="buttons" class="meow">
           <button id="settings-btn">⚙️</button>
           <button id="character-btn">👤</button>
@@ -27,47 +27,79 @@
         </div>
       </div>
 
-      <div id="text" class="status-bar-field field-border-disabled" >Hello from the corner!</div>
+      <div id="text" class="status-bar-field field-border-disabled">
+        Hello from the corner!
+      </div>
     </div>
 
-<div id="message-box" class="window" style="display: none; ">
+    <div id="message-box" class="window" style="display: none">
       <div class="title-bar">
         <div class="title-bar-text">Send a Message</div>
         <div id="message-box-buttons">
-          <button onclick="document.getElementById('message-box').style.display='none'">❌</button>
+          <button
+            onclick="document.getElementById('message-box').style.display='none'"
+          >
+            ❌
+          </button>
         </div>
       </div>
-      <div style="padding: 5px;">
-        <input type="text" id="message-input" placeholder="Type your prompt here..." style="width: 200px; margin-bottom: 5px;" />
+      <div style="padding: 5px">
+        <input
+          type="text"
+          id="message-input"
+          placeholder="Type your prompt here..."
+          style="width: 200px; margin-bottom: 5px"
+        />
         <button id="message-send-btn">Send</button>
       </div>
     </div>
 
-      <!-- SETTINGS BOX -->
-<div id="settings-box" class="window"
-     style="display:none; width: 220px; margin-top: 5px;">
-  <div class="title-bar">
-    <div class="title-bar-text">Settings</div>
-    <div id="settings-close">
-      <button onclick="document.getElementById('settings-box').style.display='none'">❌</button>
+    <!-- SETTINGS BOX -->
+    <div
+      id="settings-box"
+      class="window"
+      style="display: none; width: 220px; margin-top: 5px"
+    >
+      <div class="title-bar">
+        <div class="title-bar-text">Settings</div>
+        <div id="settings-close">
+          <button
+            onclick="document.getElementById('settings-box').style.display='none'"
+          >
+            ❌
+          </button>
+        </div>
+      </div>
+
+      <div style="padding: 10px; font-size: 14px">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+          "
+        >
+          <input type="checkbox" id="toggle-textbox" checked />
+          <label for="toggle-textbox">Show Text Bubble</label>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+          "
+        >
+          <input type="checkbox" id="toggle-confetti" checked />
+          <label for="toggle-confetti">Confetti Effect</label>
+        </div>
+      </div>
     </div>
-  </div>
-  
-  <div style="padding:10px; font-size:14px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <input type="checkbox" id="toggle-textbox" checked />
-      <label for="toggle-textbox">Show Text Bubble</label>
-    </div>
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <input type="checkbox" id="toggle-confetti" checked />
-      <label for="toggle-confetti">Confetti Effect</label>
-    </div>
-  </div>
-</div>
 
     <!-- Separate character selection window -->
-    <div id="character-window" class="window" style="display: none;">
+    <div id="character-window" class="window" style="display: none">
       <div class="title-bar">
         <div class="title-bar-text">Choose Character</div>
         <div class="title-bar-controls">
@@ -76,23 +108,29 @@
           </div>
         </div>
       </div>
-        <div class="window-body">
-          <div class="character-grid">
-            <button class="character-option" data-character="characters/amogus.jpg">
-              <img src="characters/amogus.jpg" alt="Character 1">
-            </button>
-            <button class="character-option" data-character="characters/miku.jpg">
-              <img src="characters/miku.jpg" alt="Character 2">
-            </button>
-            <button class="character-option" data-character="characters/korby.jpg">
-              <img src="characters/korby.jpg" alt="Character 3">
-            </button>
-            <button class="character-option" data-character="characters/cat.jpg">
-              <img src="characters/cat.jpg" alt="Character 4">
-            </button>
-          </div>
+      <div class="window-body">
+        <div class="character-grid">
+          <button
+            class="character-option"
+            data-character="characters/amogus.jpg"
+          >
+            <img src="characters/amogus.jpg" alt="Character 1" />
+          </button>
+          <button class="character-option" data-character="characters/miku.jpg">
+            <img src="characters/miku.jpg" alt="Character 2" />
+          </button>
+          <button
+            class="character-option"
+            data-character="characters/korby.jpg"
+          >
+            <img src="characters/korby.jpg" alt="Character 3" />
+          </button>
+          <button class="character-option" data-character="characters/cat.jpg">
+            <img src="characters/cat.jpg" alt="Character 4" />
+          </button>
         </div>
       </div>
+    </div>
     <script src="character.js"></script>
   </body>
 </html>

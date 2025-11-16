@@ -463,6 +463,15 @@ hudElement.addEventListener("click", (evt) => {
   doConfetti(evt, true);
 });
 
+document.querySelectorAll(".title-bar").forEach((titleBar) => {
+  titleBar.style.pointerEvents = "auto";
+
+  // Also set all children to auto
+  titleBar.querySelectorAll("*").forEach((child) => {
+    child.style.pointerEvents = "auto";
+  });
+});
+
 // ===============================
 // Start the app
 // ===============================
