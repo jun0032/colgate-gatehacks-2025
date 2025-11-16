@@ -3,60 +3,88 @@ const Tone = require("tone");
 
 // Hoverable elements (to enable/disable click-through)
 const interactiveElements = document.querySelectorAll(
-  "#portrait, #buttons, #text, #message-box, #character-window, #settings-box, #HUD"
+  "#portrait, #buttons, #text, #message-box, #character-window, #settings-box, #HUD, .window"
 );
 
 // New global variable to track the current player instance to prevent audio overlap
 let activePlayer = null;
 
 // ===============================
-// 🔊 Tone.js TTS with Pitch Shift
+// 💬 Text Typing Animation Function
+// ===============================
+function typeText(targetText, speed = 40) {
+  const textbox = document.getElementById("text");
+  textbox.innerHTML = ""; // Clear the box
+
+  let i = 0;
+  return new Promise((resolve) => {
+    function typing() {
+      if (i < targetText.length) {
+        // Append one character at a time
+        textbox.innerHTML += targetText.charAt(i);
+        i++;
+        setTimeout(typing, speed);
+      } else {
+        resolve(); // Resolve the promise when done typing
+      }
+    }
+    typing();
+  });
+}
+
+// ===============================
+// 🔊 Tone.js TTS with Pitch Shift (ROBUSTIFIED)
 // ===============================
 async function speakWithGoogle(text, lang = "en") {
-  // Explicitly stop and dispose of the previous player instance to guarantee no overlap
+  // Explicitly stop and dispose of the previous player instance
   if (activePlayer) {
     activePlayer.stop();
     activePlayer.dispose();
     activePlayer = null;
   }
 
-  // Sanitize text to avoid breaking URL
+  // Sanitize text
   text = String(text)
-    .replace(/[^\x00-\x7F]/g, "") // remove emojis/unicode
+    .replace(/[^\x00-\x7F]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
-  const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(
-    text
-  )}`;
+  try {
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(
+      text
+    )}`;
 
-  const player = new Tone.Player(url);
-  player.playbackRate = 1.0;
+    const player = new Tone.Player(url);
+    player.playbackRate = 1.0;
 
-  const pitchShift = new Tone.PitchShift(5).toDestination();
-  player.connect(pitchShift);
+    const pitchShift = new Tone.PitchShift(5).toDestination();
+    player.connect(pitchShift);
 
-  // Assign the new player instance
-  activePlayer = player;
+    activePlayer = player;
 
-  await Tone.loaded();
-  player.start();
+    await Tone.loaded();
+    player.start();
 
-  return new Promise((resolve) => {
-    // The promise resolves only when Tone.js reports the audio has stopped playing
-    player.onstop = () => {
-      resolve();
-      // Clear the active player reference when done
-      if (activePlayer === player) {
-        activePlayer.dispose(); // Clean up resources after playback
-        activePlayer = null;
-      }
-    };
-  });
+    return new Promise((resolve) => {
+      player.onstop = () => {
+        if (activePlayer === player) {
+          activePlayer.dispose();
+          activePlayer = null;
+        }
+        resolve();
+      };
+      // Timeout fallback to unblock the loop in case onstop fails (31s is safe for 30s audio max)
+      setTimeout(resolve, 31000);
+    });
+  } catch (e) {
+    console.error("Google TTS playback failed:", e);
+    // Resolve immediately so the main loop can continue, even if audio failed
+    return Promise.resolve();
+  }
 }
 
 // ===============================
-// 🔊 Fish Audio TTS (via backend)
+// 🔊 Fish Audio TTS (via backend) - ROBUSTIFIED
 // ===============================
 async function speakWithFishAudio(text, characterImage) {
   // Stop any active audio
@@ -66,30 +94,39 @@ async function speakWithFishAudio(text, characterImage) {
     activePlayer = null;
   }
 
+  let audioBuffer = null;
+
   try {
-    // Request audio from backend
-    const audioBuffer = await ipcRenderer.invoke(
+    // 1. Attempt to get audio from backend (IPC/Network-bound)
+    audioBuffer = await ipcRenderer.invoke(
       "generate-fish-audio",
       text,
       characterImage
     );
+  } catch (error) {
+    // This catches errors in the IPC communication itself
+    console.error("IPC call to generate-fish-audio failed:", error);
+    // audioBuffer remains null, leading to fallback
+  }
 
-    if (!audioBuffer) {
-      console.log("No audio returned, falling back to Google TTS");
-      await speakWithGoogle(text);
-      return;
-    }
+  // 2. Fallback if Fish Audio API failed or returned null (main process handler returns null)
+  if (!audioBuffer) {
+    console.log(
+      "Fish Audio failed or returned null, falling back to Google TTS."
+    );
+    await speakWithGoogle(text);
+    return;
+  }
 
-    // Convert buffer to blob URL for Tone.js
+  // 3. Play generated Fish Audio
+  try {
     const audioBlob = new Blob([audioBuffer], { type: "audio/mpeg" });
     const audioUrl = URL.createObjectURL(audioBlob);
 
-    // Ensure Tone.js context is running
     if (Tone.context.state !== "running") {
       await Tone.start();
     }
 
-    // Play with Tone.js
     const player = new Tone.Player({
       url: audioUrl,
       onload: () => {
@@ -114,10 +151,13 @@ async function speakWithFishAudio(text, characterImage) {
         if (activePlayer === player) {
           player.stop();
         }
+        resolve(); // Resolve promise on timeout
       }, 30000);
     });
   } catch (error) {
-    console.error("Fish Audio error:", error);
+    // This catches errors during Tone.js playback setup
+    console.error("Fish Audio Playback Error:", error);
+    // If playback fails, fall back and await the resolution
     await speakWithGoogle(text);
   }
 }
@@ -126,8 +166,7 @@ async function speakWithFishAudio(text, characterImage) {
 // 🔊 Main speak function
 // ===============================
 async function speak(text, characterImage) {
-  // Use Google TTS for cat, Fish Audio for others
-  if (characterImage === "characters/cat.jpg") {
+  if (characterImage.includes("cat.jpg")) {
     await speakWithGoogle(text);
   } else {
     await speakWithFishAudio(text, characterImage);
@@ -150,15 +189,11 @@ document.getElementById("close-btn").addEventListener("click", () => {
   ipcRenderer.send("close-app");
 });
 
-// ===============================
-// SETTINGS BUTTON — OPEN WINDOW
-// ===============================
 document.getElementById("settings-btn").addEventListener("click", () => {
   const box = document.getElementById("settings-box");
   box.style.display = box.style.display === "block" ? "none" : "block";
 });
 
-// SETTINGS: Hide/Show Text Bubble
 document.getElementById("toggle-textbox").addEventListener("change", (e) => {
   const textbox = document.getElementById("text");
   textbox.style.display = e.target.checked ? "block" : "none";
@@ -169,37 +204,54 @@ document.getElementById("toggle-textbox").addEventListener("change", (e) => {
 // ===============================
 async function analyzeImage(imageDataUrl) {
   const result = await ipcRenderer.invoke("analyze-image", imageDataUrl);
-  console.log(result);
-
-  // Save response into main process history for context
-  ipcRenderer.send("store-response", result);
-
   return result;
 }
 
+// ===============================================
+// Analyzer & Capture Logic (OPTIMIZED FOR PERCEIVED SPEED)
+// ===============================================
 async function captureAndAnalyze() {
+  const portrait = document.getElementById("portrait");
+
   try {
+    // 1. Start thinking effect and capture screenshot
+    portrait.classList.add("is-thinking");
+    document.getElementById("text").innerHTML = "Analyzing...";
+
     const screenshotDataUrl = await ipcRenderer.invoke("capture-screenshot");
 
+    // 2. Await AI analysis
     const result = await analyzeImage(screenshotDataUrl);
 
-    // Check if result is an error message
+    // Check for error after analysis is done
     if (result.startsWith("Error:")) {
+      portrait.classList.remove("is-thinking");
       document.getElementById("text").innerHTML =
         "⚠️ API Error - Please wait...";
       console.error("API Error:", result);
       return;
     }
 
-    document.getElementById("text").innerHTML = result;
+    // Save response into main process history for context after successful API call
+    ipcRenderer.send("store-response", result);
 
     // Get current character image for voice selection
     const currentCharacterImage = document.getElementById("portrait").src;
     const imagePath = currentCharacterImage.split("/").slice(-2).join("/");
 
-    // Wait for audio to finish before proceeding to the next loop cycle
+    // --- 🌟 CONCURRENT EXECUTION FIX 🌟 ---
+
+    // 3a. Start typing and WAIT for the text to finish appearing.
+    await typeText(result, 40);
+
+    // 3b. Remove the thinking effect immediately after the text is visible.
+    portrait.classList.remove("is-thinking");
+
+    // 3c. Start the audio generation/playback task. We await it to prevent loop overlap.
     await speak(result, imagePath);
   } catch (error) {
+    // Ensure the thinking state is cleaned up on any failure
+    portrait.classList.remove("is-thinking");
     console.error("Error capturing/analyzing:", error);
     document.getElementById("text").innerHTML = "⚠️ Error - Retrying soon...";
   }
@@ -211,14 +263,12 @@ async function captureAndAnalyze() {
 let isRunning = false;
 
 async function startAutoScreenshot() {
-  if (isRunning) return; // Prevent multiple loops
+  if (isRunning) return;
   isRunning = true;
 
   while (isRunning) {
-    // Wait for capture, analysis, and audio to complete
     await captureAndAnalyze();
 
-    // Delay between screenshots
     await new Promise((resolve) => setTimeout(resolve, 15000)); // 15 seconds
   }
 }
@@ -228,39 +278,44 @@ function stopAutoScreenshot() {
 }
 
 // ===============================
-// Chat Interaction Logic
+// Chat Interaction Logic (MODIFIED FOR CONCURRENCY)
 // ===============================
 async function sendMessage(text) {
-  // Immediately stop the background loop to prioritize chat
   stopAutoScreenshot();
+  const portrait = document.getElementById("portrait");
 
   if (!text.trim()) {
-    // If empty message, restart the loop and exit
     startAutoScreenshot();
     return;
   }
 
   try {
-    // Display 'Thinking...'
+    // 1. Start thinking
+    portrait.classList.add("is-thinking");
     document.getElementById("text").innerHTML = "Thinking...";
 
-    // Send the user's text to the backend for a text response
+    // 2. Get AI text response
     const result = await ipcRenderer.invoke("send-message", text);
     console.log("Response from backend:", result);
 
     // Save chat response into main process history for context
     ipcRenderer.send("store-response", result);
 
-    // Display the result
-    document.getElementById("text").innerHTML = result;
-
     // Get current character image for voice selection
     const currentCharacterImage = document.getElementById("portrait").src;
     const imagePath = currentCharacterImage.split("/").slice(-2).join("/");
 
-    // Speak the result out loud and WAIT for it to finish
+    // --- 🌟 CONCURRENT EXECUTION FIX 🌟 ---
+    // 3a. Start typing and WAIT for it to finish
+    await typeText(result, 40);
+
+    // 3b. Remove the thinking effect immediately
+    portrait.classList.remove("is-thinking");
+
+    // 3c. Start the audio generation/playback task.
     await speak(result, imagePath);
   } catch (error) {
+    portrait.classList.remove("is-thinking");
     console.error("Error sending message:", error);
     document.getElementById("text").innerHTML = "Error: " + error.message;
   } finally {
@@ -270,36 +325,35 @@ async function sendMessage(text) {
 }
 
 // ===============================
-// Message Box Event Listeners
+// Message Box Event Listeners (UNCHANGED)
 // ===============================
 const messageBox = document.getElementById("message-box");
 const messageInput = document.getElementById("message-input");
 const sendButton = document.getElementById("message-send-btn");
 
 document.getElementById("message-btn").addEventListener("click", () => {
-  // Toggle visibility of the message box
   messageBox.style.display =
     messageBox.style.display === "block" ? "none" : "block";
   if (messageBox.style.display === "block") {
-    messageInput.focus(); // Focus on the input when it opens
+    messageInput.focus();
   }
 });
 
 sendButton.addEventListener("click", () => {
   const text = messageInput.value;
   sendMessage(text);
-  messageInput.value = ""; // Clear the input
-  messageBox.style.display = "none"; // Close the box
+  messageInput.value = "";
+  messageBox.style.display = "none";
 });
 
 messageInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") {
-    sendButton.click(); // Trigger the send button on Enter press
+    sendButton.click();
   }
 });
 
 // ===============================
-// Character Selection Window
+// Character Selection Window (UNCHANGED)
 // ===============================
 document.getElementById("character-btn").addEventListener("click", () => {
   const charWindow = document.getElementById("character-window");
@@ -310,32 +364,49 @@ document.getElementById("character-btn").addEventListener("click", () => {
   }
 });
 
-// Close button for character window
 document
   .querySelector("#character-window .title-bar-controls button")
   .addEventListener("click", () => {
     document.getElementById("character-window").style.display = "none";
   });
 
-// Handle character selection
 document.querySelectorAll(".character-option").forEach((button) => {
   button.addEventListener("click", () => {
     const characterFile = button.dataset.character;
 
-    // Update the main portrait image
     document.getElementById("portrait").src = characterFile;
 
-    // Update selected state visual
     document.querySelectorAll(".character-option").forEach((opt) => {
       opt.classList.remove("selected");
     });
     button.classList.add("selected");
 
-    // Send character change to backend
     ipcRenderer.send("set-character", characterFile);
 
-    // Close the window after selection
     document.getElementById("character-window").style.display = "none";
+  });
+});
+
+// New selectors for all title bars (UNCHANGED)
+const titleBars = document.querySelectorAll(
+  "#HUD .title-bar, #message-box .title-bar, #settings-box .title-bar, #character-window .title-bar"
+);
+
+titleBars.forEach((element) => {
+  element.addEventListener("mouseenter", () => {
+    ipcRenderer.send("set-clickable", true);
+  });
+  element.addEventListener("mouseleave", () => {
+    ipcRenderer.send("set-clickable", false);
+  });
+});
+
+interactiveElements.forEach((element) => {
+  element.addEventListener("mouseenter", () => {
+    ipcRenderer.send("set-clickable", true);
+  });
+  element.addEventListener("mouseleave", () => {
+    ipcRenderer.send("set-clickable", false);
   });
 });
 

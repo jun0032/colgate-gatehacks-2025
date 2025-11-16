@@ -1,112 +1,198 @@
+/* Revitalized style.css */
+
+/* Global setup */
+body {
+  /* Ensure the body itself is transparent and non-interactive */
+  background-color: transparent;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Base Window container for HUD */
 #HUD {
   display: flex;
   flex-direction: column;
-  width: 10vw;
+  width: 14vw; /* Increased width for better proportions */
+  min-width: 150px;
   pointer-events: auto;
+  /* position: fixed;
+  top: 20px;
+  left: 20px; */
+  /* box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5); Modern shadow */
+  /* border-radius: 4px; Softened edges */
+}
+
+/* Portrait and Button Layout */
+.mini-container-hud {
+  display: grid;
+  grid-template-columns: 70% 30%;
+  padding: 5px;
+  background: silver; /* Match 98.css body */
+  /* border-top: 2px solid white;
+  border-left: 2px solid white;
+  border-right: 2px solid #808080;
+  border-bottom: 2px solid #808080; */
 }
 
 #portrait {
   display: block;
   width: 100%;
+  height: auto;
+  object-fit: cover;
+  border: 1px inset silver;
+  transition: transform 0.3s ease-out; /* For speaking pulse */
 }
 
-#buttons {
-  /* width: 100%; */
-  display: flex;
-  flex-direction: column;
-  /* justify-content: space-evenly; */
-  /* border: 2px solid blue; */
-}
-
+/* General Button Styling */
 button {
-  width: 1.5vw;
+  width: 100%;
+  height: 25px;
+  min-width: 0;
+  font-size: 14px;
+  padding: 0;
+  margin: 2px 0;
+  transition: transform 0.1s ease-out;
 }
 
+/* Hover/Active Button Effects for Responsiveness */
+button:hover {
+  transform: translateY(-1px); /* Slight lift */
+}
+
+button:active {
+  transform: translateY(1px); /* Pressed down look */
+  box-shadow: none;
+}
+
+/* Button Container */
+.meow {
+  display: flex;
+  flex-direction: column !important;
+  justify-content: space-evenly;
+  padding-left: 5px;
+}
+
+.meow > button {
+  height: calc(100% + 4px);
+}
+
+/* Text Bubble / Status Bar */
 #text {
+  grid-column: 1 / 3;
+  padding: 5px;
   font-size: 14px;
-  max-width: 250px;
-  text-align: center;
-  cursor: pointer; /* Show it's interactive */
+  text-align: left; /* Better for typing animation */
+  cursor: pointer;
+  min-height: 20px;
+  white-space: pre-wrap; /* Respects line breaks */
+  overflow: hidden;
+  background: white;
+  border: 2px inset #c6c6c6; /* 98.css inset look */
+}
+
+/* Title Bar Buttons */
+#buttons {
+  display: flex;
+  flex-direction: row;
 }
 
 #close-btn {
-  width: 3vw;
-  min-width: 0;
-  text-align: center;
-  align-content: center;
-  align-items: center;
-  justify-content: center;
-  justify-items: center;
-  display: flex;
+  width: 25px;
+  height: 25px;
+  font-size: 12px;
+  margin: 0;
 }
 
-.mini-container-hud {
-  display: grid;
-  grid-template-columns: 70% 30%;
-}
-.meow {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-}
-.meow > button {
-  width: 100%;
-  min-width: 0;
-  height: 100%;
+/* ========================================================
+   Visual Enhancements for Perceived Performance
+   ======================================================== */
+
+/* Thinking Pulse Animation */
+@keyframes thinking-pulse {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 10px 3px rgba(100, 150, 255, 0.8);
+  } /* Soft blue glow */
+  100% {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  }
 }
 
-#text {
-  grid-column: 1/3;
-  padding: 3px;
+.is-thinking {
+  animation: thinking-pulse 1.5s infinite;
+  border: 1px inset #0000ff !important;
 }
+
+#portrait.is-thinking {
+  animation: thinking-pulse 1.5s infinite;
+}
+
+/* ========================================================
+   Overlay Windows (Message Box, Character Window)
+   ======================================================== */
 
 #message-box {
-  width: 15vw;
+  margin-top: 5px;
+  width: 250px;
 }
 
 #character-window {
-  position: fixed;
-  top: 20px;
-  left: 320px; /* Adjust based on HUD width */
+  margin-top: 5px;
+  width: 350px;
 }
 
 .character-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  padding: 10px;
+  grid-template-columns: 25% 25% 25% 25%;
 }
 
 .character-option {
-  width: 80px;
-  height: 80px;
+  width: 100%; /* Make them fill the grid cell */
+  height: auto;
+  aspect-ratio: 1 / 1; /* Keep them square */
   cursor: pointer;
-  border: 2px solid #000;
-  transition: border 0.2s;
+  border: 1px inset silver;
+  transition: border 0.2s, transform 0.2s;
   padding: 0;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .character-option img {
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-#character-panel {
-  padding: 10px;
-  border-top: 2px solid #000;
 }
 
 .character-option:hover {
-  border: 2px solid #0000ff;
+  border-color: #f000ff; /* Flashy hover color */
+  transform: scale(1.05);
 }
 
 .character-option.selected {
-  border: 2px solid #00ff00;
+  border-color: #00ff00;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+/* Message Input Styling */
+#message-input {
+  flex-grow: 1; /* Use flex-grow for modern layout */
+}
+
+#message-box button {
+  width: 60px;
+  height: 25px;
+}
+
+/* Electron drag regions */
+.title-bar {
+  -webkit-app-region: drag;
+  user-select: none;
+  cursor: default;
+  padding: 3px;
+  height: 18px;
+}
+.title-bar button,
+.title-bar-controls button,
+#buttons button {
+  -webkit-app-region: no-drag;
 }

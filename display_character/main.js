@@ -239,7 +239,7 @@ ipcMain.handle("send-message", async (event, message) => {
 You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
 Your personality: ${currentCharacter.personality}
 Your voice style: ${currentCharacter.voice}
-A friend has sent you this message: "${message}".
+I (the user) am your friend, and I have sent you this message: "${message}".
 
 Here is ALL your previous commentary (from chat + screenshots):
 ${fullHistory}
