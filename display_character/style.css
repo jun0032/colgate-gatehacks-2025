@@ -1,36 +1,34 @@
 body {
-    pointer-events: none;
+  pointer-events: none;
 }
 
 #HUD {
-    display: flex;
-    flex-direction: column;
-    width: fit-content;
-    pointer-events: auto;
-    /* border: 2px solid red; */
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  pointer-events: auto;
+  border: 2px solid red;
+}
+
+#portrait {
+  width: 5vw;
 }
 
 #buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-    /* border: 2px solid blue; */
-}
-
-/* #controls {
+  width: 100%;
   display: flex;
   flex-direction: row;
-  gap: 1px;
-  width: fit-content;  
-  justify-content: space-evenly;
+  /* justify-content: space-evenly; */
+  /* border: 2px solid blue; */
 }
 
-#controls button {
-  cursor: pointer;
-  font-size: 12px;
-  flex: 1;
-  min-width: 30px;  
-  display: flex;           
-  align-items: center;    
-  justify-content: center; 
-} */
+button {
+  width: 1.5vw;
+}
+
+#text {
+  font-size: 14px;
+  max-width: 250px;
+  text-align: center;
+  cursor: pointer;  /* Show it's interactive */
+}
