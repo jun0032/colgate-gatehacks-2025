@@ -22,10 +22,22 @@
           <button id="game-btn">🏠</button>
         </div>
       </div>
+
+      <div id="text" class="status-bar">Hello from the corner!</div>
     </div>
 
-    <div id="text">Hello from the corner!</div>
-
+<div id="message-box" class="window" style="display: none; position: fixed; bottom: 50px; right: 10px; z-index: 100;">
+      <div class="title-bar">
+        <div class="title-bar-text">Send a Message</div>
+        <div id="message-box-buttons">
+          <button onclick="document.getElementById('message-box').style.display='none'">❌</button>
+        </div>
+      </div>
+      <div style="padding: 5px;">
+        <input type="text" id="message-input" placeholder="Type your prompt here..." style="width: 200px; margin-bottom: 5px;" />
+        <button id="message-send-btn">Send</button>
+      </div>
+    </div>
     <script src="character.js"></script>
   </body>
 </html>

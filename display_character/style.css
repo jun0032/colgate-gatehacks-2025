@@ -63,5 +63,5 @@ button {
 }
 
 #text {
-  background-color: white;
+  grid-column: 1/3;
 }

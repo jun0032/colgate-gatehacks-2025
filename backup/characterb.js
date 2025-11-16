@@ -1,30 +1,21 @@
-const { ipcRenderer } = require("electron");
-const Tone = require("tone");
+const { ipcRenderer, desktopCapturer } = require("electron");
+const Tone = require("tone"); // ← Change this line
 
-// Hoverable elements (to enable/disable click-through)
 const interactiveElements = document.querySelectorAll(
   "#portrait, #buttons, #text"
 );
 
-// New global variable to track the current player instance to prevent audio overlap
+// New global variable to track the current player instance
 let activePlayer = null;
 
-// ===============================
-// 🔊 Tone.js TTS with Pitch Shift
-// ===============================
+// --- Existing speakWithGoogle function (Ensures the promise resolves when speaking stops) ---
 async function speakWithGoogle(text, lang = "en") {
-  // 1. FIX: Explicitly stop and dispose of the previous player instance to guarantee no overlap
+  // FIX: Explicitly stop and dispose of the previous player instance
   if (activePlayer) {
     activePlayer.stop();
     activePlayer.dispose();
     activePlayer = null;
   }
-
-  // Sanitize text to avoid breaking URL
-  text = String(text)
-    .replace(/[^\x00-\x7F]/g, "") // remove emojis/unicode
-    .replace(/\s+/g, " ")
-    .trim();
 
   const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(
     text
@@ -34,7 +25,7 @@ async function speakWithGoogle(text, lang = "en") {
   player.playbackRate = 1.0;
 
   const pitchShift = new Tone.PitchShift(5).toDestination();
-  player.connect(pitchShift);
+  player.connect(pitchShift); // ← Only route through pitchShift
 
   // Assign the new player instance
   activePlayer = player;
@@ -55,9 +46,6 @@ async function speakWithGoogle(text, lang = "en") {
   });
 }
 
-// ===============================
-// UI Listeners (Click-Through, Close, Settings)
-// ===============================
 interactiveElements.forEach((element) => {
   element.addEventListener("mouseenter", () => {
     ipcRenderer.send("set-clickable", true);
@@ -67,36 +55,34 @@ interactiveElements.forEach((element) => {
   });
 });
 
+// Close button
 document.getElementById("close-btn").addEventListener("click", () => {
   ipcRenderer.send("close-app");
 });
 
+// Settings button
 document.getElementById("settings-btn").addEventListener("click", () => {
   alert("Settings clicked! Add your settings UI here");
 });
 
-// ===============================
-// Analyzer & Capture Logic
-// ===============================
+// PROMPT STUFF
 async function analyzeImage(imageDataUrl) {
   const result = await ipcRenderer.invoke("analyze-image", imageDataUrl);
   console.log(result);
-
-  // Save response into main process history for context
-  ipcRenderer.send("store-response", result);
-
   return result;
 }
 
+// Function to capture screenshot and analyze it
 async function captureAndAnalyze() {
   try {
+    // Request screenshot from main process
     const screenshotDataUrl = await ipcRenderer.invoke("capture-screenshot");
 
+    // document.getElementById("text").innerHTML = "Analyzing screenshot...";
     const result = await analyzeImage(screenshotDataUrl);
-
     document.getElementById("text").innerHTML = result;
 
-    // Wait for audio to finish before proceeding to the next loop cycle
+    // Wait for audio to finish before taking next screenshot
     await speakWithGoogle(result);
   } catch (error) {
     console.error("Error capturing/analyzing:", error);
@@ -104,9 +90,7 @@ async function captureAndAnalyze() {
   }
 }
 
-// ===============================
-// Main Loop (Automatic Screen Commentary)
-// ===============================
+// Start the automatic screenshot loop
 let isRunning = false;
 
 async function startAutoScreenshot() {
@@ -114,23 +98,20 @@ async function startAutoScreenshot() {
   isRunning = true;
 
   while (isRunning) {
-    // Wait for capture, analysis, and audio to complete
-    await captureAndAnalyze();
-
-    // Delay between screenshots (Using 4000ms as per characterb.js, adjust if needed)
+    await captureAndAnalyze(); // Wait for screenshot, analysis, AND audio to complete
+    // Optional: add a small delay between cycles
     await new Promise((resolve) => setTimeout(resolve, 4000));
   }
 }
 
+// Stop the loop
 function stopAutoScreenshot() {
   isRunning = false;
 }
 
-// ===============================
-// Chat Interaction Logic
-// ===============================
+// --- UPDATED sendMessage FUNCTION ---
 async function sendMessage(text) {
-  // 1. Immediately stop the background loop to prioritize chat
+  // 1. Immediately stop the background loop to prevent overlap
   stopAutoScreenshot();
 
   if (!text.trim()) {
@@ -147,25 +128,22 @@ async function sendMessage(text) {
     const result = await ipcRenderer.invoke("send-message", text);
     console.log("Response from backend:", result);
 
-    // 4. Save chat response into main process history for context
-    ipcRenderer.send("store-response", result);
-
-    // 5. Display the result
+    // 4. Display the result
     document.getElementById("text").innerHTML = result;
 
-    // 6. Speak the result out loud and WAIT for it to finish
+    // 5. Speak the result out loud and WAIT for it to finish
     await speakWithGoogle(result);
   } catch (error) {
     console.error("Error sending message:", error);
     document.getElementById("text").innerHTML = "Error: " + error.message;
   } finally {
-    // 7. Restart the loop after the chat message has been spoken
-    // Adding a 1-second delay gives the UI time to settle
+    // 6. Restart the loop after the message has been spoken
+    // Adding a 1-second delay gives the UI time to settle after the message box closes
     setTimeout(startAutoScreenshot, 1000);
   }
 }
 
-// Event listeners for message box UI
+// Event listeners for message box
 const messageBox = document.getElementById("message-box");
 const messageInput = document.getElementById("message-input");
 const sendButton = document.getElementById("message-send-btn");
