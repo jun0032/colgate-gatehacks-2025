@@ -3,7 +3,7 @@ const Tone = require("tone");
 
 // Hoverable elements (to enable/disable click-through)
 const interactiveElements = document.querySelectorAll(
-  "#portrait, #buttons, #text, #message-box, #character-window, #settings-box, #HUD, .window, .title-bar"
+  "#portrait, #buttons, #text, #message-box, #character-window, #settings-box, #HUD, .window, #HUD > .title-bar"
 );
 
 // Global variable to track the current player instance to prevent audio overlap
