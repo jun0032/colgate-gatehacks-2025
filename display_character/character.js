@@ -2,8 +2,9 @@ const { ipcRenderer } = require("electron");
 const Tone = require("tone");
 
 // Hoverable elements (to enable/disable click-through)
+// FIX: Added '#message-box' so the window remains clickable when the user hovers over the chat input area.
 const interactiveElements = document.querySelectorAll(
-  "#portrait, #buttons, #text"
+  "#portrait, #buttons, #text, #message-box"
 );
 
 // New global variable to track the current player instance to prevent audio overlap
