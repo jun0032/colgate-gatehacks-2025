@@ -108,9 +108,6 @@ function stopAutoScreenshot() {
   isRunning = false;
 }
 
-document.getElementById("text").innerHTML = "Starting...";
-startAutoScreenshot();
-
 // Character button - toggle character selection window
 document.getElementById("character-btn").addEventListener("click", () => {
   const charWindow = document.getElementById("character-window");
@@ -122,25 +119,30 @@ document.getElementById("character-btn").addEventListener("click", () => {
 });
 
 // Close button for character window
-document.getElementById("character-close-btn").addEventListener("click", () => {
-  document.getElementById("character-window").style.display = "none";
-});
+document
+  .querySelector("#character-window .title-bar-controls button")
+  .addEventListener("click", () => {
+    document.getElementById("character-window").style.display = "none";
+  });
 
 // Handle character selection
 document.querySelectorAll(".character-option").forEach((button) => {
   button.addEventListener("click", () => {
     const characterFile = button.dataset.character;
-    
+
     // Update the main portrait
     document.getElementById("portrait").src = characterFile;
-    
+
     // Update selected state
-    document.querySelectorAll(".character-option").forEach(opt => {
+    document.querySelectorAll(".character-option").forEach((opt) => {
       opt.classList.remove("selected");
     });
     button.classList.add("selected");
-    
+
     // Close the window after selection
     document.getElementById("character-window").style.display = "none";
   });
 });
+
+document.getElementById("text").innerHTML = "Starting...";
+startAutoScreenshot();
