@@ -213,7 +213,8 @@ ipcMain.handle("analyze-image", async (event, imagePathOrDataUrl) => {
         ? responseHistory.join("\n")
         : "(no previous responses yet)";
 
-    const prompt = `You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
+    const prompt =
+      `You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
                     Your personality: ${currentCharacter.personality}
                     Your voice style: ${currentCharacter.voice}
                     You speak once every ~15 seconds.
@@ -258,7 +259,7 @@ ipcMain.handle("analyze-image", async (event, imagePathOrDataUrl) => {
       ],
     });
 
-    const text = response.text.substring(0, 200).replace(/[^\x00-\x7F]/g, "");;
+    const text = response.text.substring(0, 200).replace(/[^\x00-\x7F]/g, "");
 
     return text;
   } catch (error) {
@@ -276,7 +277,8 @@ ipcMain.handle("send-message", async (event, message) => {
         ? responseHistory.join("\n")
         : "(no previous responses yet)";
 
-    const prompt = `You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
+    const prompt =
+      `You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
                     Your personality: ${currentCharacter.personality}
                     Your voice style: ${currentCharacter.voice}
                     I (the user) am your friend, and I have sent you this message: "${message}".
@@ -295,7 +297,7 @@ ipcMain.handle("send-message", async (event, message) => {
                     - If the user is browsing or switching tasks: point out the change.
                     - Ignore old or irrelevant history.
                     - Make the reply unique and avoid repeating old lines.
-                    `.trim()
+                    `.trim();
 
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-lite",
