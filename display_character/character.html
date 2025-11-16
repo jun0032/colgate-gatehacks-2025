@@ -5,12 +5,18 @@
     <link rel="stylesheet" href="https://unpkg.com/98.css" />
   </head>
   <body>
-    <div id="controls">
-      <button id="settings-btn">⚙️</button>
-      <button id="close-btn">✖️</button>
+    <div id = "GUI">
+      <img src="character.gif" />
+
+      <div id="controls">
+        <button id="settings-btn">⚙️</button>
+        <button id="character-btn">👤</button>
+        <button id="chat-btn">💬</button>
+        <button id="game-btn">🎲</button>
+        <button id="close-btn">❌</button>
+      </div>
     </div>
-    <img id="character" src="character.gif" />
-    <div id="text">Hello from the corner!</div>
+
     <script>
       const { ipcRenderer, desktopCapturer } = require("electron");
 
@@ -48,7 +54,7 @@
       // Settings button
       document.getElementById("settings-btn").addEventListener("click", () => {
         alert("Settings clicked! Add your settings UI here");
-      });
+      }); 
 
       // PROMPT STUFF
       async function analyzeImage(imageDataUrl) {
