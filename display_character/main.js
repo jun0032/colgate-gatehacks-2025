@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const {
   app,
   BrowserWindow,
@@ -212,27 +213,24 @@ ipcMain.handle("analyze-image", async (event, imagePathOrDataUrl) => {
         ? responseHistory.join("\n")
         : "(no previous responses yet)";
 
-    const prompt = `
-You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
-Your personality: ${currentCharacter.personality}
-Your voice style: ${currentCharacter.voice}
-You speak once every ~15 seconds.
+    const prompt = `You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
+                    Your personality: ${currentCharacter.personality}
+                    Your voice style: ${currentCharacter.voice}
+                    You speak once every ~15 seconds.
 
-Here are ALL your previous comments:
-${fullHistory}
+                    Here are ALL your previous comments:
+                    ${fullHistory}
 
-Your job:
-- DO NOT use emojis.
-- Keep response UNDER 150 characters.
-- Speak in a way that matches your personality (${currentCharacter.personality}) and voice (${currentCharacter.voice}).
-- Focus on what the user is doing RIGHT NOW.
-- Point out major changes from the last few screenshots.
-- If the user is doing homework or coding: encourage, motivate, or help.
-- If the user is watching videos: react, comment, or hype it up.
-- If the user is browsing or switching tasks: point out the change.
-- Ignore old or irrelevant history.
-- Keep the tone energetic, like a livestream companion.
-`.trim();
+                    Your job:
+                    - Keep response UNDER 150 characters.
+                    - Focus on what the user is doing RIGHT NOW.
+                    - Point out major changes from the last few screenshots.
+                    - If the user is doing homework or coding: encourage, motivate, or help.
+                    - If the user is watching videos: react, comment, or hype it up.
+                    - If the user is browsing or switching tasks: point out the change.
+                    - Ignore old or irrelevant history.
+                    - Keep the tone energetic, like a livestream companion.
+                    `.trim();
 
     let base64Image;
 
@@ -244,7 +242,7 @@ Your job:
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash-lite",
       contents: [
         {
           parts: [
@@ -260,7 +258,7 @@ Your job:
       ],
     });
 
-    const text = response.text.substring(0, 200);
+    const text = response.text.substring(0, 200).replace(/[^\x00-\x7F]/g, "");;
 
     return text;
   } catch (error) {
@@ -278,40 +276,37 @@ ipcMain.handle("send-message", async (event, message) => {
         ? responseHistory.join("\n")
         : "(no previous responses yet)";
 
-    const conversationPrompt = `
-You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
-Your personality: ${currentCharacter.personality}
-Your voice style: ${currentCharacter.voice}
-I (the user) am your friend, and I have sent you this message: "${message}".
+    const prompt = `You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
+                    Your personality: ${currentCharacter.personality}
+                    Your voice style: ${currentCharacter.voice}
+                    I (the user) am your friend, and I have sent you this message: "${message}".
 
-Here is ALL your previous commentary (from chat + screenshots):
-${fullHistory}
+                    Here is ALL your previous commentary (from chat + screenshots):
+                    ${fullHistory}
 
-Your job:
-- DO NOT use emojis.
-- Keep the response UNDER 200 characters.
-- Speak in a way that matches your personality (${currentCharacter.personality}) and voice (${currentCharacter.voice}).
-- First: give a short summary of what the fan said.
-- Then: respond to the fan in your natural personality.
-- React to what the user is doing RIGHT NOW on their screen.
-- Point out major differences compared to the last few screenshots.
-- If the user is doing homework/coding: encourage, motivate, or help them.
-- If the user is watching videos: react, joke, or hype it up.
-- If the user is browsing or switching tasks: point out the change.
-- Ignore old or irrelevant history.
-- Make the reply unique and avoid repeating old lines.
-`.trim();
+                    Your job:
+                    - Keep the response UNDER 200 characters.
+                    - First: give a short summary of what the fan said.
+                    - Then: respond to the fan in your natural personality.
+                    - React to what the user is doing RIGHT NOW on their screen.
+                    - Point out major differences compared to the last few screenshots.
+                    - If the user is doing homework/coding: encourage, motivate, or help them.
+                    - If the user is watching videos: react, joke, or hype it up.
+                    - If the user is browsing or switching tasks: point out the change.
+                    - Ignore old or irrelevant history.
+                    - Make the reply unique and avoid repeating old lines.
+                    `.trim()
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash-lite",
       contents: [
         {
-          parts: [{ text: conversationPrompt }],
+          parts: [{ text: prompt }],
         },
       ],
     });
 
-    const text = response.text.substring(0, 200);
+    const text = response.text.substring(0, 200).replace(/[^\x00-\x7F]/g, "");
 
     return text;
   } catch (error) {
@@ -319,6 +314,7 @@ Your job:
     return `Error: ${error.message}`;
   }
 });
+
 // ======================================
 // 🔵 Fish Audio Generation Handler (FINAL FIX)
 // ======================================
