@@ -83,46 +83,46 @@ app.whenReady().then(() => {
 });
 
 // PROMPT GENERATION
-// let previousResponse = "";
+let previousResponse = "";
 
-// ipcMain.handle("analyze-image", async (event, imagePathOrDataUrl) => {
-//   try {
-//     const prompt = `You have previously replied "${previousResponse}" Make your next response unique.
-// INSTRUCTIONS: Help me code. Keep your response minimal, and under 200 characters. Anything exceeding 200 characters will be truncated`;
+ipcMain.handle("analyze-image", async (event, imagePathOrDataUrl) => {
+  try {
+    const prompt = `You have previously replied "${previousResponse}" Make your next response unique.
+INSTRUCTIONS: Help me code. Keep your response minimal, and under 200 characters. Anything exceeding 200 characters will be truncated`;
 
-//     let base64Image;
+    let base64Image;
 
-//     if (imagePathOrDataUrl.startsWith("data:image")) {
-//       base64Image = imagePathOrDataUrl.split(",")[1];
-//     } else {
-//       const imageData = fs.readFileSync(imagePathOrDataUrl);
-//       base64Image = imageData.toString("base64");
-//     }
+    if (imagePathOrDataUrl.startsWith("data:image")) {
+      base64Image = imagePathOrDataUrl.split(",")[1];
+    } else {
+      const imageData = fs.readFileSync(imagePathOrDataUrl);
+      base64Image = imageData.toString("base64");
+    }
 
-//     const response = await ai.models.generateContent({
-//       model: "gemini-2.0-flash-exp",
-//       contents: [
-//         {
-//           parts: [
-//             { text: prompt },
-//             {
-//               inlineData: {
-//                 mimeType: "image/png",
-//                 data: base64Image,
-//               },
-//             },
-//           ],
-//         },
-//       ],
-//     });
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-exp",
+      contents: [
+        {
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: "image/png",
+                data: base64Image,
+              },
+            },
+          ],
+        },
+      ],
+    });
 
-//     const text = response.text.substring(0, 200);
-//     previousResponse = text;
-//     return text;
-//   } catch (error) {
-//     return `Error: ${error.message}`;
-//   }
-// });
+    const text = response.text.substring(0, 200);
+    previousResponse = text;
+    return text;
+  } catch (error) {
+    return `Error: ${error.message}`;
+  }
+});
 
 app.on("window-all-closed", () => {
   app.quit();

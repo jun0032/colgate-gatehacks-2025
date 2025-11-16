@@ -1,32 +1,27 @@
-.window {
-  width: auto !important;  /* Override inline style */
-  display: inline-block;   /* Shrink to content */
-  center;
+body {
+    pointer-events: none;
 }
 
-.window-body {
-  width: auto;
+#HUD {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    pointer-events: auto;
+    /* border: 2px solid red; */
 }
 
-#GUI {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-sizing: border-box;
+#buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    /* border: 2px solid blue; */
 }
 
-#GUI img {
-  width: auto;
-  height: 20vh;
-  border-color: black;
-  border: 
-}
-
-#controls {
+/* #controls {
   display: flex;
   flex-direction: row;
   gap: 1px;
-  width: fit-content;  /* Match the image width */
+  width: fit-content;  
   justify-content: space-evenly;
 }
 
@@ -34,8 +29,8 @@
   cursor: pointer;
   font-size: 12px;
   flex: 1;
-  min-width: 30px;  /* Minimum button width */
-  display: flex;           /* Added */
-  align-items: center;     /* Centers vertically */
-  justify-content: center; /* Centers horizontally */
-}
+  min-width: 30px;  
+  display: flex;           
+  align-items: center;    
+  justify-content: center; 
+} */
