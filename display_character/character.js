@@ -2,7 +2,6 @@ const { ipcRenderer } = require("electron");
 const Tone = require("tone");
 
 // Hoverable elements (to enable/disable click-through)
-// FIX: Added '#message-box' so the window remains clickable when the user hovers over the chat input area.
 const interactiveElements = document.querySelectorAll(
   "#portrait, #buttons, #text, #message-box, #character-window, #settings-box"
 );
@@ -14,7 +13,7 @@ let activePlayer = null;
 // 🔊 Tone.js TTS with Pitch Shift
 // ===============================
 async function speakWithGoogle(text, lang = "en") {
-  // 1. FIX: Explicitly stop and dispose of the previous player instance to guarantee no overlap
+  // Explicitly stop and dispose of the previous player instance to guarantee no overlap
   if (activePlayer) {
     activePlayer.stop();
     activePlayer.dispose();
@@ -81,12 +80,10 @@ document.getElementById("settings-btn").addEventListener("click", () => {
 });
 
 // SETTINGS: Hide/Show Text Bubble
-document
-  .getElementById("toggle-textbox")
-  .addEventListener("change", (e) => {
-    const textbox = document.getElementById("text");
-    textbox.style.display = e.target.checked ? "block" : "none";
-  });
+document.getElementById("toggle-textbox").addEventListener("change", (e) => {
+  const textbox = document.getElementById("text");
+  textbox.style.display = e.target.checked ? "block" : "none";
+});
 
 // ===============================
 // Analyzer & Capture Logic
@@ -130,7 +127,7 @@ async function startAutoScreenshot() {
     // Wait for capture, analysis, and audio to complete
     await captureAndAnalyze();
 
-    // Delay between screenshots (Using 4000ms as per characterb.js, adjust if needed)
+    // Delay between screenshots
     await new Promise((resolve) => setTimeout(resolve, 4000));
   }
 }
@@ -143,7 +140,7 @@ function stopAutoScreenshot() {
 // Chat Interaction Logic
 // ===============================
 async function sendMessage(text) {
-  // 1. Immediately stop the background loop to prioritize chat
+  // Immediately stop the background loop to prioritize chat
   stopAutoScreenshot();
 
   if (!text.trim()) {
@@ -153,32 +150,33 @@ async function sendMessage(text) {
   }
 
   try {
-    // 2. Display 'Thinking...'
+    // Display 'Thinking...'
     document.getElementById("text").innerHTML = "Thinking...";
 
-    // 3. Send the user's text to the backend for a text response
+    // Send the user's text to the backend for a text response
     const result = await ipcRenderer.invoke("send-message", text);
     console.log("Response from backend:", result);
 
-    // 4. Save chat response into main process history for context
+    // Save chat response into main process history for context
     ipcRenderer.send("store-response", result);
 
-    // 5. Display the result
+    // Display the result
     document.getElementById("text").innerHTML = result;
 
-    // 6. Speak the result out loud and WAIT for it to finish
+    // Speak the result out loud and WAIT for it to finish
     await speakWithGoogle(result);
   } catch (error) {
     console.error("Error sending message:", error);
     document.getElementById("text").innerHTML = "Error: " + error.message;
   } finally {
-    // 7. Restart the loop after the chat message has been spoken
-    // Adding a 1-second delay gives the UI time to settle
+    // Restart the loop after the chat message has been spoken
     setTimeout(startAutoScreenshot, 1000);
   }
 }
 
-// Event listeners for message box UI
+// ===============================
+// Message Box Event Listeners
+// ===============================
 const messageBox = document.getElementById("message-box");
 const messageInput = document.getElementById("message-input");
 const sendButton = document.getElementById("message-send-btn");
@@ -205,7 +203,9 @@ messageInput.addEventListener("keypress", (e) => {
   }
 });
 
-// Character button - toggle character selection window
+// ===============================
+// Character Selection Window
+// ===============================
 document.getElementById("character-btn").addEventListener("click", () => {
   const charWindow = document.getElementById("character-window");
   if (charWindow.style.display === "none") {
@@ -222,25 +222,34 @@ document
     document.getElementById("character-window").style.display = "none";
   });
 
-// Handle character selection
+// ===============================
+// 🔵 CHARACTER SELECTION - This is the key part that changed!
+// ===============================
 document.querySelectorAll(".character-option").forEach((button) => {
   button.addEventListener("click", () => {
     const characterFile = button.dataset.character;
 
-    // Update the main portrait
+    // Update the main portrait image
     document.getElementById("portrait").src = characterFile;
 
-    // Update selected state
+    // Update selected state visual
     document.querySelectorAll(".character-option").forEach((opt) => {
       opt.classList.remove("selected");
     });
     button.classList.add("selected");
+
+    // 🔵 THIS IS THE NEW LINE - Send character change to backend
+    // The backend will match this image path to a character object
+    // and update the AI prompts with that character's personality & voice
+    ipcRenderer.send("set-character", characterFile);
 
     // Close the window after selection
     document.getElementById("character-window").style.display = "none";
   });
 });
 
-// Start automatically when page loads
+// ===============================
+// Start the app
+// ===============================
 document.getElementById("text").innerHTML = "Starting...";
 startAutoScreenshot();

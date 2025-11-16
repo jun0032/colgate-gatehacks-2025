@@ -18,14 +18,53 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
+const characters = [
+  {
+    name: "cat",
+    personality: "playful and curious",
+    voice: "high-pitched and cute",
+    image: "characters/cat.jpg",
+  },
+  {
+    name: "miku",
+    personality: "cheerful and energetic",
+    voice: "synthesized and melodic",
+    image: "characters/miku.jpg",
+  },
+  {
+    name: "korby",
+    personality: "logical and helpful",
+    voice: "monotone and precise",
+    image: "characters/korby.jpg",
+  },
+  {
+    name: "amogus",
+    personality: "loyal and friendly",
+    voice: "enthusiastic and warm",
+    image: "characters/amogus.jpg",
+  },
+];
+
 // ======================================
-// 🔵 Store ALL previous AI responses
+// 🔵 Store current character and history
 // ======================================
+let currentCharacter = characters[0]; // Default to cat
 let responseHistory = [];
 
 ipcMain.on("store-response", (event, text) => {
-  // Store the response for future context (used by analyze-image and send-message)
   responseHistory.push(text);
+});
+
+// ======================================
+// 🔵 Character Selection Handler
+// ======================================
+ipcMain.on("set-character", (event, imagePath) => {
+  // Find the character by matching the image path
+  const character = characters.find((char) => char.image === imagePath);
+  if (character) {
+    currentCharacter = character;
+    console.log(`Character changed to: ${character.name}`);
+  }
 });
 
 app.whenReady().then(() => {
@@ -93,7 +132,9 @@ ipcMain.handle("analyze-image", async (event, imagePathOrDataUrl) => {
         : "(no previous responses yet)";
 
     const prompt = `
-You are the cat sitting in the top-left corner of the user's screen.
+You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
+Your personality: ${currentCharacter.personality}
+Your voice style: ${currentCharacter.voice}
 You speak once every ~8 seconds.
 
 Here are ALL your previous comments:
@@ -102,6 +143,7 @@ ${fullHistory}
 Your job:
 - DO NOT use emojis.
 - Keep response UNDER 150 characters.
+- Speak in a way that matches your personality (${currentCharacter.personality}) and voice (${currentCharacter.voice}).
 - Focus on what the user is doing RIGHT NOW.
 - Point out major changes from the last few screenshots.
 - If the user is doing homework or coding: encourage, motivate, or help.
@@ -139,10 +181,6 @@ Your job:
 
     const text = response.text.substring(0, 200);
 
-    // NOTE: The frontend (character.js) is responsible for calling ipcMain.on("store-response")
-    // to keep the history accurate, but for now we'll push it here.
-    // responseHistory.push(text);
-
     return text;
   } catch (error) {
     return `Error: ${error.message}`;
@@ -159,8 +197,10 @@ ipcMain.handle("send-message", async (event, message) => {
         ? responseHistory.join("\n")
         : "(no previous responses yet)";
 
-const conversationPrompt = `
-You are the cat sitting in the top-left corner of the user's screen.
+    const conversationPrompt = `
+You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
+Your personality: ${currentCharacter.personality}
+Your voice style: ${currentCharacter.voice}
 A friend has sent you this message: "${message}".
 
 Here is ALL your previous commentary (from chat + screenshots):
@@ -169,9 +209,9 @@ ${fullHistory}
 Your job:
 - DO NOT use emojis.
 - Keep the response UNDER 200 characters.
+- Speak in a way that matches your personality (${currentCharacter.personality}) and voice (${currentCharacter.voice}).
 - First: give a short summary of what the fan said.
-- Then: respond to the fan in your natural, playful cat personality.
-- Your tone should be energetic, curious, mischievous, or supportive.
+- Then: respond to the fan in your natural personality.
 - React to what the user is doing RIGHT NOW on their screen.
 - Point out major differences compared to the last few screenshots.
 - If the user is doing homework/coding: encourage, motivate, or help them.
@@ -191,8 +231,6 @@ Your job:
     });
 
     const text = response.text.substring(0, 200);
-
-    // responseHistory.push(text); // Storing here or on the frontend will work. Sticking to frontend push for consistency.
 
     return text;
   } catch (error) {
