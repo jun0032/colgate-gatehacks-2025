@@ -4,7 +4,7 @@ const Tone = require("tone");
 // Hoverable elements (to enable/disable click-through)
 // FIX: Added '#message-box' so the window remains clickable when the user hovers over the chat input area.
 const interactiveElements = document.querySelectorAll(
-  "#portrait, #buttons, #text, #message-box, #character-window"
+  "#portrait, #buttons, #text, #message-box, #character-window, #settings-box"
 );
 
 // New global variable to track the current player instance to prevent audio overlap
@@ -72,9 +72,21 @@ document.getElementById("close-btn").addEventListener("click", () => {
   ipcRenderer.send("close-app");
 });
 
+// ===============================
+// SETTINGS BUTTON — OPEN WINDOW
+// ===============================
 document.getElementById("settings-btn").addEventListener("click", () => {
-  alert("Settings clicked! Add your settings UI here");
+  const box = document.getElementById("settings-box");
+  box.style.display = box.style.display === "block" ? "none" : "block";
 });
+
+// SETTINGS: Hide/Show Text Bubble
+document
+  .getElementById("toggle-textbox")
+  .addEventListener("change", (e) => {
+    const textbox = document.getElementById("text");
+    textbox.style.display = e.target.checked ? "block" : "none";
+  });
 
 // ===============================
 // Analyzer & Capture Logic

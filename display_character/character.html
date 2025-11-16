@@ -39,6 +39,45 @@
       </div>
     </div>
 
+      <!-- SETTINGS BOX -->
+    <div id="settings-box" class="window"
+         style="display:none; position:fixed; bottom:140px; right:10px; z-index:100; width: 220px;">
+      <div class="title-bar">
+        <div class="title-bar-text">Settings</div>
+        <div id="settings-close">
+          <button onclick="document.getElementById('settings-box').style.display='none'">❌</button>
+        </div>
+      </div>
+
+      <div style="padding:10px; font-size:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span>Show Text Bubble</span>
+          <label style=" position:relative; display:inline-block; width:42px; height:22px; cursor:pointer; ">
+            <input type="checkbox" id="toggle-textbox" checked style="opacity:0; width:0; height:0;">
+            <span style=" position:absolute; inset:0; background:#bfbfbf; border-radius:20px; transition:0.3s;"></span>
+            <span style=" position:absolute; height:18px; width:18px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.3s;"></span>
+          </label>
+
+          <script>
+            const toggle = document.querySelector('#toggle-textbox');
+            const bg = toggle.parentElement.querySelector('span:first-of-type');
+            const knob = toggle.parentElement.querySelector('span:last-of-type');
+            function updateSwitch() {
+              if (toggle.checked) {
+                bg.style.background = '#4cd964';
+                knob.style.transform = 'translateX(20px)';
+              } else {
+                bg.style.background = '#bfbfbf';
+                knob.style.transform = 'translateX(0px)';
+              }
+            }
+            toggle.addEventListener('change', updateSwitch);
+            updateSwitch();
+          </script>
+        </div>
+      </div>
+    </div>
+
     <!-- Separate character selection window -->
     <div id="character-window" class="window" style="display: none;">
       <div class="title-bar">
