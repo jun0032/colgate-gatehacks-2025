@@ -10,6 +10,33 @@ const interactiveElements = document.querySelectorAll(
 let activePlayer = null;
 
 // ===============================
+// 🎉 Confetti Effect
+// ===============================
+let lastX = 0;
+
+function r(mi, ma) {
+  return parseInt(Math.random() * (ma - mi) + mi);
+}
+function doConfetti(evt, hard) {
+  // Check if confetti is enabled
+  const confettiEnabled = document.getElementById("toggle-confetti").checked;
+  if (!confettiEnabled || !window.confetti) return;
+
+  const direction = Math.sign(lastX - evt.clientX);
+  lastX = evt.clientX;
+  const particleCount = hard ? r(122, 245) : r(2, 15);
+
+  window.confetti({
+    particleCount,
+    angle: r(90, 90 + direction * 30),
+    spread: r(45, 80),
+    origin: {
+      x: evt.clientX / window.innerWidth,
+      y: evt.clientY / window.innerHeight,
+    },
+  });
+}
+// ===============================
 // 💬 Text Typing Animation Function
 // ===============================
 function typeText(targetText, speed = 40) {
@@ -421,6 +448,19 @@ pauseBtn.addEventListener("click", () => {
     document.getElementById("text").innerHTML = "Resuming...";
     startAutoScreenshot();
   }
+});
+
+// ===============================
+// 🎉 Confetti on HUD hover/click
+// ===============================
+const hudElement = document.getElementById("HUD");
+
+hudElement.addEventListener("mousemove", (evt) => {
+  doConfetti(evt, false);
+});
+
+hudElement.addEventListener("click", (evt) => {
+  doConfetti(evt, true);
 });
 
 // ===============================

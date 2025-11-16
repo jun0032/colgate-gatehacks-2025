@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <script type="module">
+  import confetti from "https://cdn.skypack.dev/canvas-confetti";
+  window.confetti = confetti;
+</script>
   </head>
   <body>
     <div id="HUD" class="window">
@@ -40,24 +44,27 @@
     </div>
 
       <!-- SETTINGS BOX -->
-    <div id="settings-box" class="window"
-        style="display:none; width: 220px; margin-top: 5px;">
-      <div class="title-bar">
-        <div class="title-bar-text">Settings</div>
-        <div id="settings-close">
-          <button onclick="document.getElementById('settings-box').style.display='none'">❌</button>
-        </div>
-      </div>
-
-      <div style="padding:10px; font-size:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          
-          <input type="checkbox" id="toggle-textbox" checked />
-          <label for="toggle-textbox">Show Text Bubble</label>
-          
-          </div>
-      </div>
+<div id="settings-box" class="window"
+     style="display:none; width: 220px; margin-top: 5px;">
+  <div class="title-bar">
+    <div class="title-bar-text">Settings</div>
+    <div id="settings-close">
+      <button onclick="document.getElementById('settings-box').style.display='none'">❌</button>
     </div>
+  </div>
+  
+  <div style="padding:10px; font-size:14px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <input type="checkbox" id="toggle-textbox" checked />
+      <label for="toggle-textbox">Show Text Bubble</label>
+    </div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <input type="checkbox" id="toggle-confetti" checked />
+      <label for="toggle-confetti">Confetti Effect</label>
+    </div>
+  </div>
+</div>
 
     <!-- Separate character selection window -->
     <div id="character-window" class="window" style="display: none;">
