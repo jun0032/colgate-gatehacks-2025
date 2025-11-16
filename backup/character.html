@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+  </head>
+  <body>
+    <div id="HUD" class="window">
+      <div class="title-bar">
+        <div class="title-bar-text">Your Best Friend.</div>
+        <div id="buttons">
+          <button id="close-btn">❌</button>
+        </div>
+      </div>
+      <div class="mini-container-hud">
+        <img id="portrait" src="character.gif"></img>
+        <div id="buttons" class="meow">
+          <button id="settings-btn">⚙️</button>
+          <button id="character-btn">👤</button>
+          <button id="message-btn">💬</button>
+          <button id="game-btn">🏠</button>
+        </div>
+      </div>
+      
+      <div id="text">Hello from the corner!</div>
+    </div>
+
+    <!-- Separate character selection window -->
+    <div id="character-window" class="window" style="display: none;">
+      <div class="title-bar">
+        <div class="title-bar-text">Choose Character</div>
+        <div class="title-bar-controls">
+          <div id="buttons">
+            <button id="close-btn">❌</button>
+          </div>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="character-grid">
+          <button class="character-option" data-character="character1.gif">
+            <img src="character.gif" alt="Character 1">
+          </button>
+          <button class="character-option" data-character="character2.gif">
+            <img src="character.gif" alt="Character 2">
+          </button>
+          <button class="character-option" data-character="character3.gif">
+            <img src="character.gif" alt="Character 3">
+          </button>
+          <button class="character-option" data-character="character4.gif">
+            <img src="character.gif" alt="Character 4">
+          </button>
+        </div>
+      </div>
+
+
+    <script src="character.js"></script>
+  </body>
+</html>
