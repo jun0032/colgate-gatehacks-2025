@@ -1,34 +1,41 @@
+.window {
+  width: auto !important;  /* Override inline style */
+  display: inline-block;   /* Shrink to content */
+  center;
+}
+
+.window-body {
+  width: auto;
+}
+
 #GUI {
+  display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  padding: 10px;
   box-sizing: border-box;
 }
 
 #GUI img {
   width: auto;
-  height: 20vh;  /* 20% of viewport height */
-  margin-bottom: 10px;
+  height: 20vh;
+  border-color: black;
+  border: 
 }
 
 #controls {
   display: flex;
+  flex-direction: row;
   gap: 1px;
   width: fit-content;  /* Match the image width */
+  justify-content: space-evenly;
 }
 
 #controls button {
   cursor: pointer;
   font-size: 12px;
-  transition: background 0.2s;
   flex: 1;
   min-width: 30px;  /* Minimum button width */
   display: flex;           /* Added */
   align-items: center;     /* Centers vertically */
   justify-content: center; /* Centers horizontally */
-}
-
-#controls button:hover {
-  background: rgba(0, 0, 0, 0.9);
 }
