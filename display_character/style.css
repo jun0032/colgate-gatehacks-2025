@@ -11,13 +11,14 @@ body {
 }
 
 #portrait {
-  width: 5vw;
+  display: block;
+  width: 100%;
 }
 
 #buttons {
-  width: 100%;
+  /* width: 100%; */
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   /* justify-content: space-evenly; */
   /* border: 2px solid blue; */
 }
@@ -30,5 +31,33 @@ button {
   font-size: 14px;
   max-width: 250px;
   text-align: center;
-  cursor: pointer;  /* Show it's interactive */
+  cursor: pointer; /* Show it's interactive */
+}
+
+#close-btn {
+  width: 3vw;
+  min-width: 0;
+  text-align: center;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+  justify-items: center;
+  display: flex;
+}
+
+.mini-container-hud {
+  display: grid;
+  grid-template-columns: 70% 30%;
+}
+.meow {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.meow > button {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
 }
