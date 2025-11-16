@@ -6,7 +6,7 @@ const interactiveElements = document.querySelectorAll(
   "#portrait, #buttons, #text, #message-box, #character-window, #settings-box, #HUD, .window"
 );
 
-// New global variable to track the current player instance to prevent audio overlap
+// Global variable to track the current player instance to prevent audio overlap
 let activePlayer = null;
 
 // ===============================
@@ -20,12 +20,11 @@ function typeText(targetText, speed = 40) {
   return new Promise((resolve) => {
     function typing() {
       if (i < targetText.length) {
-        // Append one character at a time
         textbox.innerHTML += targetText.charAt(i);
         i++;
         setTimeout(typing, speed);
       } else {
-        resolve(); // Resolve the promise when done typing
+        resolve();
       }
     }
     typing();
@@ -33,15 +32,27 @@ function typeText(targetText, speed = 40) {
 }
 
 // ===============================
-// 🔊 Tone.js TTS with Pitch Shift (ROBUSTIFIED)
+// 🔊 Stop Active Audio (Helper Function)
+// ===============================
+function stopActiveAudio() {
+  if (activePlayer) {
+    try {
+      activePlayer.stop();
+      activePlayer.dispose();
+    } catch (e) {
+      console.error("Error stopping active player:", e);
+    } finally {
+      activePlayer = null;
+    }
+  }
+}
+
+// ===============================
+// 🔊 Tone.js TTS with Pitch Shift
 // ===============================
 async function speakWithGoogle(text, lang = "en") {
-  // Explicitly stop and dispose of the previous player instance
-  if (activePlayer) {
-    activePlayer.stop();
-    activePlayer.dispose();
-    activePlayer = null;
-  }
+  // Stop any previous audio
+  stopActiveAudio();
 
   // Sanitize text
   text = String(text)
@@ -73,52 +84,47 @@ async function speakWithGoogle(text, lang = "en") {
         }
         resolve();
       };
-      // Timeout fallback to unblock the loop in case onstop fails (31s is safe for 30s audio max)
-      setTimeout(resolve, 31000);
+      // Reduced timeout to 10 seconds (Google TTS is usually short)
+      setTimeout(() => {
+        if (activePlayer === player) {
+          stopActiveAudio();
+        }
+        resolve();
+      }, 10000);
     });
   } catch (e) {
     console.error("Google TTS playback failed:", e);
-    // Resolve immediately so the main loop can continue, even if audio failed
     return Promise.resolve();
   }
 }
 
 // ===============================
-// 🔊 Fish Audio TTS (via backend) - ROBUSTIFIED
+// 🔊 Fish Audio TTS (via backend)
 // ===============================
 async function speakWithFishAudio(text, characterImage) {
   // Stop any active audio
-  if (activePlayer) {
-    activePlayer.stop();
-    activePlayer.dispose();
-    activePlayer = null;
-  }
+  stopActiveAudio();
 
   let audioBuffer = null;
 
   try {
-    // 1. Attempt to get audio from backend (IPC/Network-bound)
     audioBuffer = await ipcRenderer.invoke(
       "generate-fish-audio",
       text,
       characterImage
     );
   } catch (error) {
-    // This catches errors in the IPC communication itself
     console.error("IPC call to generate-fish-audio failed:", error);
-    // audioBuffer remains null, leading to fallback
   }
 
-  // 2. Fallback if Fish Audio API failed or returned null (main process handler returns null)
+  // Fallback if Fish Audio API failed
   if (!audioBuffer) {
-    console.log(
-      "Fish Audio failed or returned null, falling back to Google TTS."
-    );
+    console.log("Fish Audio failed, falling back to Google TTS.");
     await speakWithGoogle(text);
     return;
   }
 
-  // 3. Play generated Fish Audio
+  // Play generated Fish Audio
   try {
     const audioBlob = new Blob([audioBuffer], { type: "audio/mpeg" });
     const audioUrl = URL.createObjectURL(audioBlob);
@@ -146,18 +152,16 @@ async function speakWithFishAudio(text, characterImage) {
         resolve();
       };
 
-      // Timeout fallback
+      // Reduced timeout to 15 seconds
       setTimeout(() => {
         if (activePlayer === player) {
-          player.stop();
+          stopActiveAudio();
         }
-        resolve(); // Resolve promise on timeout
-      }, 30000);
+        resolve();
+      }, 15000);
     });
   } catch (error) {
-    // This catches errors during Tone.js playback setup
     console.error("Fish Audio Playback Error:", error);
-    // If playback fails, fall back and await the resolution
     await speakWithGoogle(text);
   }
 }
@@ -207,23 +211,23 @@ async function analyzeImage(imageDataUrl) {
   return result;
 }
 
-// ===============================================
-// Analyzer & Capture Logic (OPTIMIZED FOR PERCEIVED SPEED)
-// ===============================================
+// ===============================
+// Capture and Analyze (FIXED)
+// ===============================
 async function captureAndAnalyze() {
   const portrait = document.getElementById("portrait");
 
   try {
-    // 1. Start thinking effect and capture screenshot
+    // Stop any lingering audio from previous cycle
+    stopActiveAudio();
+
+    // Start thinking effect
     portrait.classList.add("is-thinking");
     document.getElementById("text").innerHTML = "Analyzing...";
 
     const screenshotDataUrl = await ipcRenderer.invoke("capture-screenshot");
-
-    // 2. Await AI analysis
     const result = await analyzeImage(screenshotDataUrl);
 
-    // Check for error after analysis is done
     if (result.startsWith("Error:")) {
       portrait.classList.remove("is-thinking");
       document.getElementById("text").innerHTML =
@@ -232,25 +236,20 @@ async function captureAndAnalyze() {
       return;
     }
 
-    // Save response into main process history for context after successful API call
     ipcRenderer.send("store-response", result);
 
-    // Get current character image for voice selection
     const currentCharacterImage = document.getElementById("portrait").src;
     const imagePath = currentCharacterImage.split("/").slice(-2).join("/");
 
-    // --- 🌟 CONCURRENT EXECUTION FIX 🌟 ---
-
-    // 3a. Start typing and WAIT for the text to finish appearing.
+    // Type text and wait for completion
     await typeText(result, 40);
 
-    // 3b. Remove the thinking effect immediately after the text is visible.
+    // Remove thinking effect
     portrait.classList.remove("is-thinking");
 
-    // 3c. Start the audio generation/playback task. We await it to prevent loop overlap.
+    // Play audio and WAIT for it to complete
     await speak(result, imagePath);
   } catch (error) {
-    // Ensure the thinking state is cleaned up on any failure
     portrait.classList.remove("is-thinking");
     console.error("Error capturing/analyzing:", error);
     document.getElementById("text").innerHTML = "⚠️ Error - Retrying soon...";
@@ -258,7 +257,7 @@ async function captureAndAnalyze() {
 }
 
 // ===============================
-// Main Loop (Automatic Screen Commentary)
+// Main Loop (FIXED)
 // ===============================
 let isRunning = false;
 
@@ -267,18 +266,23 @@ async function startAutoScreenshot() {
   isRunning = true;
 
   while (isRunning) {
+    // Complete the entire cycle (analysis + typing + audio)
     await captureAndAnalyze();
 
-    await new Promise((resolve) => setTimeout(resolve, 15000)); // 15 seconds
+    // ONLY wait the delay after everything is done
+    if (isRunning) {
+      await new Promise((resolve) => setTimeout(resolve, 15000));
+    }
   }
 }
 
 function stopAutoScreenshot() {
   isRunning = false;
+  stopActiveAudio(); // Stop audio when pausing
 }
 
 // ===============================
-// Chat Interaction Logic (MODIFIED FOR CONCURRENCY)
+// Chat Interaction Logic (FIXED)
 // ===============================
 async function sendMessage(text) {
   stopAutoScreenshot();
@@ -290,42 +294,40 @@ async function sendMessage(text) {
   }
 
   try {
-    // 1. Start thinking
+    // Stop any lingering audio
+    stopActiveAudio();
+
     portrait.classList.add("is-thinking");
     document.getElementById("text").innerHTML = "Thinking...";
 
-    // 2. Get AI text response
     const result = await ipcRenderer.invoke("send-message", text);
     console.log("Response from backend:", result);
 
-    // Save chat response into main process history for context
     ipcRenderer.send("store-response", result);
 
-    // Get current character image for voice selection
     const currentCharacterImage = document.getElementById("portrait").src;
     const imagePath = currentCharacterImage.split("/").slice(-2).join("/");
 
-    // --- 🌟 CONCURRENT EXECUTION FIX 🌟 ---
-    // 3a. Start typing and WAIT for it to finish
+    // Type text and wait
     await typeText(result, 40);
 
-    // 3b. Remove the thinking effect immediately
+    // Remove thinking effect
     portrait.classList.remove("is-thinking");
 
-    // 3c. Start the audio generation/playback task.
+    // Play audio and WAIT for completion
     await speak(result, imagePath);
   } catch (error) {
     portrait.classList.remove("is-thinking");
     console.error("Error sending message:", error);
     document.getElementById("text").innerHTML = "Error: " + error.message;
   } finally {
-    // Restart the loop after the chat message has been spoken
+    // Restart the loop after chat is complete
     setTimeout(startAutoScreenshot, 1000);
   }
 }
 
 // ===============================
-// Message Box Event Listeners (UNCHANGED)
+// Message Box Event Listeners
 // ===============================
 const messageBox = document.getElementById("message-box");
 const messageInput = document.getElementById("message-input");
@@ -353,7 +355,7 @@ messageInput.addEventListener("keypress", (e) => {
 });
 
 // ===============================
-// Character Selection Window (UNCHANGED)
+// Character Selection Window
 // ===============================
 document.getElementById("character-btn").addEventListener("click", () => {
   const charWindow = document.getElementById("character-window");
@@ -387,7 +389,7 @@ document.querySelectorAll(".character-option").forEach((button) => {
   });
 });
 
-// New selectors for all title bars (UNCHANGED)
+// Title bars for draggable windows
 const titleBars = document.querySelectorAll(
   "#HUD .title-bar, #message-box .title-bar, #settings-box .title-bar, #character-window .title-bar"
 );
@@ -401,13 +403,24 @@ titleBars.forEach((element) => {
   });
 });
 
-interactiveElements.forEach((element) => {
-  element.addEventListener("mouseenter", () => {
-    ipcRenderer.send("set-clickable", true);
-  });
-  element.addEventListener("mouseleave", () => {
-    ipcRenderer.send("set-clickable", false);
-  });
+// ===============================
+// Pause Button Functionality (FIXED)
+// ===============================
+let isPaused = false;
+const pauseBtn = document.getElementById("pause-btn");
+
+pauseBtn.addEventListener("click", () => {
+  isPaused = !isPaused;
+
+  if (isPaused) {
+    stopAutoScreenshot(); // This now also stops audio
+    pauseBtn.textContent = "▶";
+    document.getElementById("text").innerHTML = "Paused";
+  } else {
+    pauseBtn.textContent = "⏸";
+    document.getElementById("text").innerHTML = "Resuming...";
+    startAutoScreenshot();
+  }
 });
 
 // ===============================
