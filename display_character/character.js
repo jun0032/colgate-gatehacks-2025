@@ -12,7 +12,7 @@ function speakWithGoogle(text, lang = "en") {
     )}`;
     const audio = new Audio(url);
     audio.onended = () => resolve(); // Resolve when audio finishes
-    audio.onerror = () => reject(new Error("Audio playback failed"));
+    // audio.onerror = () => reject(new Error("Audio playback failed"));
     audio.play();
   });
 }
@@ -49,7 +49,7 @@ async function captureAndAnalyze() {
     // Request screenshot from main process
     const screenshotDataUrl = await ipcRenderer.invoke("capture-screenshot");
 
-    document.getElementById("text").innerHTML = "Analyzing screenshot...";
+    // document.getElementById("text").innerHTML = "Analyzing screenshot...";
     const result = await analyzeImage(screenshotDataUrl);
     document.getElementById("text").innerHTML = result;
 
@@ -71,7 +71,7 @@ async function startAutoScreenshot() {
   while (isRunning) {
     await captureAndAnalyze(); // Wait for screenshot, analysis, AND audio to complete
     // Optional: add a small delay between cycles
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 4000));
   }
 }
 

@@ -38,17 +38,17 @@ app.whenReady().then(() => {
     },
   });
 
-  // load html 
+  // load html
   win.loadFile("character.html");
-  
+
   // Check operating system
-  const isLinux = process.platform === 'linux';
+  const isLinux = process.platform === "linux";
 
   if (!isLinux) {
     // Only enable click-through on Windows/Mac
     win.setIgnoreMouseEvents(true, { forward: true });
-    
-    ipcMain.on('set-clickable', (event, clickable) => {
+
+    ipcMain.on("set-clickable", (event, clickable) => {
       win.setIgnoreMouseEvents(!clickable, { forward: true });
     });
   }
@@ -72,7 +72,7 @@ app.whenReady().then(() => {
     try {
       const sources = await desktopCapturer.getSources({
         types: ["screen"],
-        thumbnailSize: { width: width, height: height}, 
+        thumbnailSize: { width: width, height: height },
       });
       return sources[0].thumbnail.toDataURL();
     } catch (error) {
@@ -100,7 +100,7 @@ INSTRUCTIONS: Help me code. Keep your response minimal, and under 200 characters
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.5-flash",
       contents: [
         {
           parts: [
