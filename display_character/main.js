@@ -13,11 +13,22 @@ app.commandLine.appendSwitch("disable-gpu");
 app.commandLine.appendSwitch("disable-software-rasterizer");
 
 const { GoogleGenAI } = require("@google/genai");
+// REMOVED: const { FishAudioClient } = await import("fish-audio");
 const fs = require("fs");
+
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
+// ======================================
+// ⚠️ Initialize Fish Audio client (Moved)
+// ======================================
+// It must be declared here but initialized later in app.whenReady()
+let fishAudioClient = null;
+
+// ======================================
+// 🔵 Character Data
+// ======================================
 const characters = [
   {
     name: "cat",
@@ -67,7 +78,34 @@ ipcMain.on("set-character", (event, imagePath) => {
   }
 });
 
-app.whenReady().then(() => {
+// ======================================
+// 🔵 Fish Audio API Key Handler
+// ======================================
+ipcMain.handle("get-fish-api-key", async () => {
+  return process.env.FISH_API_KEY || null;
+});
+
+// ======================================
+// 🌟 app.whenReady() with Async Initialization
+// ======================================
+app.whenReady().then(async () => {
+  // Make the callback async
+  // 1. DYNAMICALLY IMPORT AND INITIALIZE FISH AUDIO CLIENT
+  if (process.env.FISH_API_KEY) {
+    try {
+      // Use dynamic import and await to load the ES Module
+      const { FishAudioClient: ClientClass } = await import("fish-audio");
+      fishAudioClient = new ClientClass({ apiKey: process.env.FISH_API_KEY });
+      console.log("✓ Fish Audio client initialized");
+    } catch (error) {
+      console.error("Failed to load fish-audio module:", error);
+      console.warn("⚠ FISH_API_KEY not found or client failed to initialize");
+    }
+  } else {
+    console.warn("⚠ FISH_API_KEY not found in .env");
+  }
+
+  // 2. CONTINUE WITH ELECTRON WINDOW SETUP
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
 
@@ -135,7 +173,7 @@ ipcMain.handle("analyze-image", async (event, imagePathOrDataUrl) => {
 You are ${currentCharacter.name} sitting in the top-left corner of the user's screen.
 Your personality: ${currentCharacter.personality}
 Your voice style: ${currentCharacter.voice}
-You speak once every ~8 seconds.
+You speak once every ~15 seconds.
 
 Here are ALL your previous comments:
 ${fullHistory}
@@ -236,6 +274,53 @@ Your job:
   } catch (error) {
     console.error("Error processing user message:", error);
     return `Error: ${error.message}`;
+  }
+});
+// ======================================
+// 🔵 Fish Audio Generation Handler (FINAL FIX)
+// ======================================
+ipcMain.handle("generate-fish-audio", async (event, text, characterImage) => {
+  if (!fishAudioClient) {
+    // If client wasn't initialized in app.whenReady(), throw an error for logging
+    throw new Error("Fish Audio client is not initialized.");
+  }
+
+  // Define voice ID mapping (adjust these placeholders to actual Fish Audio Voice IDs)
+  let voiceId = "en_us_male_default"; // Fallback to a generic voice
+
+  if (characterImage.includes("miku")) {
+    // Assuming Miku uses a custom reference voice or a specific ID
+    voiceId = process.env.MIKU_VOICE_ID || "miku_synthetic_voice_id";
+  } else if (characterImage.includes("korby")) {
+    voiceId = process.env.KORBY_VOICE_ID || "korby_monotone_voice_id";
+  } else if (characterImage.includes("amogus")) {
+    voiceId = process.env.AMOGUS_VOICE_ID || "amogus_monotone_voice_id";
+  }
+
+  // --- Using the correct fishAudio.textToSpeech.convert method and stream reading ---
+  try {
+    const audioStream = await fishAudioClient.textToSpeech.convert({
+      text: text,
+      reference_id: voiceId, // Use voice_id for standard voices
+      // If you are using custom voices, ensure you use the correct parameter (e.g., reference_id)
+    });
+
+    // ⚠️ FIX: Read the Node.js Stream into a Buffer
+    const chunks = [];
+
+    // Use the async iterator to safely read all data chunks from the stream
+    for await (const chunk of audioStream) {
+      chunks.push(chunk);
+    }
+
+    // Concatenate all chunks into a single Buffer
+    const buffer = Buffer.concat(chunks);
+
+    return buffer; // Return the Buffer to the renderer process
+  } catch (error) {
+    console.error("Fish Audio API Error:", error);
+    // Return null to signal the renderer to use the Google TTS fallback
+    return null;
   }
 });
 

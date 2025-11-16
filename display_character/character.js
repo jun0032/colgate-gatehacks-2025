@@ -3,7 +3,7 @@ const Tone = require("tone");
 
 // Hoverable elements (to enable/disable click-through)
 const interactiveElements = document.querySelectorAll(
-  "#portrait, #buttons, #text, #message-box, #character-window, #settings-box"
+  "#portrait, #buttons, #text, #message-box, #character-window, #settings-box, #HUD"
 );
 
 // New global variable to track the current player instance to prevent audio overlap
@@ -56,6 +56,85 @@ async function speakWithGoogle(text, lang = "en") {
 }
 
 // ===============================
+// 🔊 Fish Audio TTS (via backend)
+// ===============================
+async function speakWithFishAudio(text, characterImage) {
+  // Stop any active audio
+  if (activePlayer) {
+    activePlayer.stop();
+    activePlayer.dispose();
+    activePlayer = null;
+  }
+
+  try {
+    // Request audio from backend
+    const audioBuffer = await ipcRenderer.invoke(
+      "generate-fish-audio",
+      text,
+      characterImage
+    );
+
+    if (!audioBuffer) {
+      console.log("No audio returned, falling back to Google TTS");
+      await speakWithGoogle(text);
+      return;
+    }
+
+    // Convert buffer to blob URL for Tone.js
+    const audioBlob = new Blob([audioBuffer], { type: "audio/mpeg" });
+    const audioUrl = URL.createObjectURL(audioBlob);
+
+    // Ensure Tone.js context is running
+    if (Tone.context.state !== "running") {
+      await Tone.start();
+    }
+
+    // Play with Tone.js
+    const player = new Tone.Player({
+      url: audioUrl,
+      onload: () => {
+        player.start();
+      },
+    }).toDestination();
+
+    activePlayer = player;
+
+    return new Promise((resolve) => {
+      player.onstop = () => {
+        URL.revokeObjectURL(audioUrl);
+        if (activePlayer === player) {
+          activePlayer.dispose();
+          activePlayer = null;
+        }
+        resolve();
+      };
+
+      // Timeout fallback
+      setTimeout(() => {
+        if (activePlayer === player) {
+          player.stop();
+        }
+      }, 30000);
+    });
+  } catch (error) {
+    console.error("Fish Audio error:", error);
+    await speakWithGoogle(text);
+  }
+}
+
+// ===============================
+// 🔊 Main speak function
+// ===============================
+async function speak(text, characterImage) {
+  // Use Google TTS for cat, Fish Audio for others
+  if (characterImage === "characters/cat.jpg") {
+    await speakWithGoogle(text);
+  } else {
+    await speakWithFishAudio(text, characterImage);
+  }
+}
+
+// ===============================
 // UI Listeners (Click-Through, Close, Settings)
 // ===============================
 interactiveElements.forEach((element) => {
@@ -104,13 +183,25 @@ async function captureAndAnalyze() {
 
     const result = await analyzeImage(screenshotDataUrl);
 
+    // Check if result is an error message
+    if (result.startsWith("Error:")) {
+      document.getElementById("text").innerHTML =
+        "⚠️ API Error - Please wait...";
+      console.error("API Error:", result);
+      return;
+    }
+
     document.getElementById("text").innerHTML = result;
 
+    // Get current character image for voice selection
+    const currentCharacterImage = document.getElementById("portrait").src;
+    const imagePath = currentCharacterImage.split("/").slice(-2).join("/");
+
     // Wait for audio to finish before proceeding to the next loop cycle
-    await speakWithGoogle(result);
+    await speak(result, imagePath);
   } catch (error) {
     console.error("Error capturing/analyzing:", error);
-    document.getElementById("text").innerHTML = "Error: " + error.message;
+    document.getElementById("text").innerHTML = "⚠️ Error - Retrying soon...";
   }
 }
 
@@ -128,7 +219,7 @@ async function startAutoScreenshot() {
     await captureAndAnalyze();
 
     // Delay between screenshots
-    await new Promise((resolve) => setTimeout(resolve, 4000));
+    await new Promise((resolve) => setTimeout(resolve, 15000)); // 15 seconds
   }
 }
 
@@ -163,8 +254,12 @@ async function sendMessage(text) {
     // Display the result
     document.getElementById("text").innerHTML = result;
 
+    // Get current character image for voice selection
+    const currentCharacterImage = document.getElementById("portrait").src;
+    const imagePath = currentCharacterImage.split("/").slice(-2).join("/");
+
     // Speak the result out loud and WAIT for it to finish
-    await speakWithGoogle(result);
+    await speak(result, imagePath);
   } catch (error) {
     console.error("Error sending message:", error);
     document.getElementById("text").innerHTML = "Error: " + error.message;
@@ -222,9 +317,7 @@ document
     document.getElementById("character-window").style.display = "none";
   });
 
-// ===============================
-// 🔵 CHARACTER SELECTION - This is the key part that changed!
-// ===============================
+// Handle character selection
 document.querySelectorAll(".character-option").forEach((button) => {
   button.addEventListener("click", () => {
     const characterFile = button.dataset.character;
@@ -238,9 +331,7 @@ document.querySelectorAll(".character-option").forEach((button) => {
     });
     button.classList.add("selected");
 
-    // 🔵 THIS IS THE NEW LINE - Send character change to backend
-    // The backend will match this image path to a character object
-    // and update the AI prompts with that character's personality & voice
+    // Send character change to backend
     ipcRenderer.send("set-character", characterFile);
 
     // Close the window after selection
