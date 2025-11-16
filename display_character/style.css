@@ -191,7 +191,11 @@ button:active {
   cursor: default;
   padding: 3px;
   height: 18px;
+
+  pointer-events: auto; /* ADD THIS LINE */
 }
+
+
 .title-bar button,
 .title-bar-controls button,
 #buttons button {
