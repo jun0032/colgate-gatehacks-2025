@@ -75,6 +75,7 @@ button:active {
 
 .meow > button {
   height: calc(100% + 4px);
+  min-width: 0;
 }
 
 /* Text Bubble / Status Bar */
@@ -194,7 +195,6 @@ button:active {
 
   pointer-events: auto; /* ADD THIS LINE */
 }
-
 
 .title-bar button,
 .title-bar-controls button,
