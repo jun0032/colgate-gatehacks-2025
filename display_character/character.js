@@ -1,6 +1,8 @@
 const { ipcRenderer } = require("electron");
 const Tone = require("tone");
 
+let AUTO_DELAY = 11000; // replaces all timers
+
 // Hoverable elements (to enable/disable click-through)
 const interactiveElements = document.querySelectorAll(
   "#portrait, #buttons, #text, #message-box, #character-window, #settings-box, #HUD, .window, #HUD > .title-bar"
@@ -117,7 +119,7 @@ async function speakWithGoogle(text, lang = "en") {
           stopActiveAudio();
         }
         resolve();
-      }, 10000);
+      }, AUTO_DELAY);
     });
   } catch (e) {
     console.error("Google TTS playback failed:", e);
@@ -185,7 +187,7 @@ async function speakWithFishAudio(text, characterImage) {
           stopActiveAudio();
         }
         resolve();
-      }, 15000);
+      }, AUTO_DELAY);
     });
   } catch (error) {
     console.error("Fish Audio Playback Error:", error);
@@ -298,7 +300,7 @@ async function startAutoScreenshot() {
 
     // ONLY wait the delay after everything is done
     if (isRunning) {
-      await new Promise((resolve) => setTimeout(resolve, 15000));
+      await new Promise((resolve) => setTimeout(resolve, AUTO_DELAY));
     }
   }
 }
