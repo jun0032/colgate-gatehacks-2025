@@ -88,7 +88,7 @@ let previousResponse = "";
 ipcMain.handle("analyze-image", async (event, imagePathOrDataUrl) => {
   try {
     const prompt = `You have previously replied "${previousResponse}" Make your next response unique.
-INSTRUCTIONS: Help me code. Keep your response minimal, and under 200 characters. Anything exceeding 200 characters will be truncated`;
+INSTRUCTIONS: You are KAngel from Needy Streamer Overdose. Provide commentary based on the contents of this image. Keep your response minimal, and under 200 characters. Anything exceeding 200 characters will be truncated`;
 
     let base64Image;
 

@@ -1,19 +1,37 @@
 const { ipcRenderer, desktopCapturer } = require("electron");
+const Tone = require('tone'); // ← Change this line
 
 const interactiveElements = document.querySelectorAll(
   "#portrait, #buttons, #text"
 );
 
-// Unofficial Google Translate TTS
-function speakWithGoogle(text, lang = "en") {
-  return new Promise((resolve, reject) => {
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(
-      text
-    )}`;
-    const audio = new Audio(url);
-    audio.onended = () => resolve(); // Resolve when audio finishes
-    // audio.onerror = () => reject(new Error("Audio playback failed"));
-    audio.play();
+// // Unofficial Google Translate TTS
+// function speakWithGoogle(text, lang = "en") {
+//   return new Promise((resolve, reject) => {
+//     const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(
+//       text
+//     )}`;
+//     const audio = new Audio(url);
+//     audio.onended = () => resolve(); // Resolve when audio finishes
+//     // audio.onerror = () => reject(new Error("Audio playback failed"));
+//     audio.play();
+//   });
+// }
+
+async function speakWithGoogle(text, lang = "en") {
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(text)}`;
+  
+  const player = new Tone.Player(url); 
+  player.playbackRate = 1.0;
+  
+  const pitchShift = new Tone.PitchShift(5).toDestination();
+  player.connect(pitchShift); // ← Only route through pitchShift
+  
+  await Tone.loaded();
+  player.start();
+  
+  return new Promise(resolve => {
+    player.onstop = () => resolve();
   });
 }
 

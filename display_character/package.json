@@ -11,6 +11,8 @@
   "dependencies": {
     "@google/genai": "^1.29.1",
     "98.css": "^0.1.21",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "soundtouchjs": "^0.2.1",
+    "tone": "^15.1.22"
   }
 }
